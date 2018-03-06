@@ -1,0 +1,18 @@
+<mvc:View
+    controllerName="mysplit.Splitter"
+    xmlns="sap.m"  
+    xmlns:mvc="sap.ui.core.mvc"  
+    xmlns:layout="sap.ui.layout"  
+    xmlns:commons="sap.ui.commons"  
+    displayBlock="true"  
+>  
+    <layout:Splitter height="500px">  
+        <layout:contentAreas>
+	 <mvc:XMLView viewName="mysplit.Summary" height="100%">  
+                <mvc:layoutData><layout:SplitterLayoutData size="33%"/></mvc:layoutData> 
+            </mvc:XMLView>  
+
+            <mvc:XMLView viewName="mysplit.TestPanelGL" height="100%"/>  
+        </layout:contentAreas>  
+  </layout:Splitter>  
+</mvc:View>

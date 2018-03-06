@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+ 
+	<head>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta charset="utf-8">
+
+		<title>Eve-7</title>
+
+                <script src="/jsrootsys/scripts/JSRootCore.js" type="text/javascript"></script>
+
+		<!-- Application launch configuration -->
+    <script>
+    
+function InitCustomUI(handle) {
+    // from here you can use  JSROOT.sap variable like
+
+    sap.ui.getCore().loadLibrary("sap.tnt"); 
+    jQuery.sap.registerModulePath("mysplit", "/currentdir/");
+
+    
+    handle.SetReceiver({
+	OnWebsocketOpened: function(handle) {
+	    console.log('Connected');
+	    handle.Send(">>> Init msg from client TEST");
+	},
+	
+	OnWebsocketMsg: function(handle, msg) {
+	    console.log('>>> index.html OnWebsocketMsg  Get msg ' + msg.substring(0, 30) + ' handle ' + !!handle);
+	    //  var controllerName;
+	    var funcName;
+	    var funcArgs;
+	    for (var i = 0; i < msg.length; i++) {
+		//	 console.log(i, "----- check ",msg[i] );
+		if (msg[i] == '_') {
+		    //  controllerName =  msg.substring(0, i);
+		}
+		if (msg[i] == ':') {
+		    var elem = sap.ui.getCore().byId("__xmlview2");
+		    console.log("elem 2, ", elem);
+		    var cont = elem.getController();
+		    console.log("cont ", cont);
+                    cont["ProcessMsg"](msg);
+		    //  cont[funcName](funcArgs);
+		    // console.log(" funcName =  ", msg.substring(controllerName.length + 1, i));
+		    break;
+		}
+	    }
+	},
+	
+	OnWebsocketClosed: function(handle) {
+	    // when connection closed, close panel as well
+	    if (window) window.close();
+	}
+    });
+    
+    handle.Connect(); // only here connection is established
+    
+    
+    sap.ui.getCore().attachInit(function() {
+	new sap.m.App ({
+	    pages: [
+		new sap.m.Page({
+		    id: "idMain",
+		    title: "Splitter",
+		    enableScrolling : true,
+		    content: [ new sap.ui.core.ComponentContainer({
+			name : "mysplit"
+		    })]
+		})
+	    ]
+	}).placeAt("content");
+    });
+}
+
+JSROOT.ConnectWebWindow({
+    prereq: "openui5;",
+    callback: InitCustomUI
+});
+
+</script>
+    </head>
+
+    <!-- UI Content -->
+    <body class="sapUiBody" id="content" role="application">
+    </body>
+
+</html>
