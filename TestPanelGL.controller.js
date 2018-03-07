@@ -23,7 +23,7 @@ sap.ui.define([
         },
 
         ProcessMsg: function(msg) {
-            console.log("AMT TestPanelGL  processmsg ---->", msg);
+           // console.log("AMT TestPanelGL  processmsg ---->", msg);
             if (msg.indexOf("GEO:")==0) {
                 var json = msg.substr(4);
                 var data = JSROOT.parse(json);

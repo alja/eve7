@@ -5,7 +5,7 @@
    xmlns="sap.m"
    height="100%"
    >
-   <Page id="testpanel_page" title="GL Panel" showHeader="true">
+   <Page id="testpanel_page" title="GL Panel" showHeader="false">
       <content>
            <mvc:XMLView id="panelGL" width="100%" height="100%" viewName="sap.ui.jsroot.view.Panel">
       </mvc:XMLView>
