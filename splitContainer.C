@@ -88,7 +88,7 @@ REX::TEvePointSet* getPointSet(int npoints = 2, float s=2)
 
 
             TString json = TBufferJSON::ConvertToJSON(gse, gROOT->GetClass("ROOT::Experimental::TEveGeoShapeExtract"));
-            printf("geo json %s \n", json.Data());
+            printf("Sending geo json \n");
             fWindow->Send(std::string("GEO:") + json.Data(), fConnId);
          }
          if (1) {
@@ -96,7 +96,7 @@ REX::TEvePointSet* getPointSet(int npoints = 2, float s=2)
             auto ps = getPointSet(200, s);
             list->Add(ps);
             TString json = TBufferJSON::ConvertToJSON(list);
-            printf("json EXT %s \n", json.Data());
+            printf("Sending json event\n");
             fWindow->Send(std::string("EXT:") + json.Data(), fConnId);
          }
          return;
