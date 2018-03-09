@@ -15,10 +15,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
 //			  console.log(" this view ", this.getView());
 			  var mainToolbarHeight = 49;
 			  var height = mainViewHeight - mainToolbarHeight;
-			  console.log("height >>>  " , height);
+			  //console.log("height >>>  " , height);
 			  
 			  var splitter =  this.getView().byId("mainSplitter");
-			  console.log("splitter dddd ", splitter);
+			  // console.log("splitter dddd ", splitter);
 			  splitter.setHeight(height + "px");
 		      },
 		      onAfterRendering: function(){
