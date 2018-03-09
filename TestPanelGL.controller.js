@@ -1,6 +1,7 @@
 sap.ui.define([
    'sap/ui/jsroot/GuiPanelController',
-   'sap/ui/model/json/JSONModel'
+    'sap/ui/model/json/JSONModel',
+    "sap/ui/core/ResizeHandler"
 ], function (GuiPanelController, JSONModel) {
     "use strict";
 
@@ -9,7 +10,8 @@ sap.ui.define([
         // function called from GuiPanelController
         onPanelInit : function() {
             var id = this.getView().getId();
-            console.log("onPanelInit TestPanelGL id = " + id);
+            console.log("onPanelInit TestPanelGL id = " + id);            
+	   // ResizeHandler.register(this.getView(), this.onResize.bind(this));
         },
         onInit : function() {
             var id = this.getView().getId();
@@ -62,6 +64,20 @@ sap.ui.define([
                 return true;
             }
         },
+	onResize: function(event) {
+            // use timeout
+            console.log("resize painter")
+            if (this.resize_tmout) clearTimeout(this.resize_tmout);
+            this.resize_tmout = setTimeout(this.onResizeTimeout.bind(this), 300); // minimal latency
+	},
+
+	onResizeTimeout: function() {
+            delete this.resize_tmout;
+            if (this.geo_painter) {
+		this.geo_painter.CheckResize();
+		console.log("geo painter check resize ");
+	    }
+	}
 
     });
 
