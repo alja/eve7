@@ -106,12 +106,11 @@ REX::TEvePointSet* getPointSet(int npoints = 2, float s=2)
          fConnId = 0;
          return;
       }
-
-
-
-      
    }
 
+   void changeNumberOfPoints()
+   {
+   }
    
    void makeWebWindow(const std::string &where = "")
    {

@@ -10,6 +10,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                       requesetNewN:function()
                       {
                           console.log("requesetNewN\n");
+                          globalHandle.Send("changeNumPoints()"); 
                       }
 		      
 		  });

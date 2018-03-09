@@ -14,8 +14,6 @@ sap.ui.define([
         onInit : function() {
             var id = this.getView().getId();
             console.log("onInit AMT ???? TestPanelGL id = " + id);
-         //   console.log("handle ",handle );
-          //  handle.Send("dddddddddddddd");
         },
 
         // function called from GuiPanelController
