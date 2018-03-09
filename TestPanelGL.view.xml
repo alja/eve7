@@ -7,8 +7,8 @@
    >
    <Page id="testpanel_page" title="GL Panel" showHeader="false">
       <content>
-           <mvc:XMLView id="panelGL" width="100%" height="100%" viewName="sap.ui.jsroot.view.Panel">
+           <mvc:XMLView id="panelGL" width="100%" height="99%" viewName="sap.ui.jsroot.view.Panel">
       </mvc:XMLView>
-      </content>
+      </content> 
    </Page>
 </mvc:View>
