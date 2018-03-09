@@ -1,4 +1,4 @@
-<mvc:View
+<mvc:View  height="100%" class="sapUiSizeCompact"
     controllerName="mysplit.Splitter"
     xmlns="sap.m"  
     xmlns:mvc="sap.ui.core.mvc"  
@@ -6,13 +6,13 @@
     xmlns:commons="sap.ui.commons"  
     displayBlock="true"  
 >  
-    <layout:Splitter id="mainSplitter" height="500px">  
+    <layout:Splitter orientation="Horizontal" id="MainAreaSplitter">  
         <layout:contentAreas>
 	 <mvc:XMLView viewName="mysplit.Summary" height="100%">  
                 <mvc:layoutData><layout:SplitterLayoutData size="33%"/></mvc:layoutData> 
             </mvc:XMLView>  
 
-            <mvc:XMLView viewName="mysplit.TestPanelGL" height="100%"/>  
+            <mvc:XMLView  id="MainPanel" viewName="mysplit.TestPanelGL" height="100%"/>  
         </layout:contentAreas>  
   </layout:Splitter>  
 </mvc:View>

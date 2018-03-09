@@ -17,9 +17,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
 			  var height = mainViewHeight - mainToolbarHeight;
 			  //console.log("height >>>  " , height);
 			  
-			  var splitter =  this.getView().byId("mainSplitter");
+			  var splitter =  this.getView().byId("MainAreaSplitter");
 			  // console.log("splitter dddd ", splitter);
-			  splitter.setHeight(height + "px");
+			  if (splitter) {
+                              splitter.setHeight(height + "px");
+                          }
 		      },
 		      onAfterRendering: function(){
 			  var me = this;

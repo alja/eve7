@@ -30,7 +30,7 @@ sap.ui.define([
 
                 if (data) {
                     var pthis = this;
-	            JSROOT.draw("__xmlview2--panelGL", data, "", function(painter) {
+	            JSROOT.draw("TopEveId--MainPanel--panelGL", data, "", function(painter) {
                         console.log('TestPanelGL painter callback ==> painter', painter);
                         pthis.geo_painter = painter;
                         if (pthis.fast_event) pthis.drawExtra(pthis.fast_event);

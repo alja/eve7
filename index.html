@@ -1,17 +1,33 @@
-<!DOCTYPE HTML>
-<html>
- 
-	<head>
-		<meta http-equiv="X-UA-Compatible" content="IE=edge">
-		<meta charset="utf-8">
-
-		<title>Eve-7</title>
-
-                <script src="/jsrootsys/scripts/JSRootCore.js" type="text/javascript"></script>
-
-		<!-- Application launch configuration -->
-    <script>
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <title>Eve7</title>
+      <script type="text/javascript" src="jsrootsys/scripts/JSRootCore.js"></script>
+   </head>
     
+   <style>
+      html { height: 100%; }
+      body { min-height: 100%; margin: 0; overflow: hidden }
+      #EveDiv {
+         position: absolute;
+         left: 0;
+         top: 0;
+         bottom: 0;
+         right: 0;
+         padding: 1
+      }
+   </style>
+
+   <body>
+      <div id="EveDiv">
+         loading scripts...
+      </div>
+   </body>
+
+ <script type='text/javascript'>
+   
 function InitCustomUI(handle) {
     // from here you can use  JSROOT.sap variable like
 
@@ -36,7 +52,8 @@ function InitCustomUI(handle) {
 		    //  controllerName =  msg.substring(0, i);
 		}
 		if (msg[i] == ':') {
-		    var elem = sap.ui.getCore().byId("__xmlview2");
+		  //  var elem = sap.ui.core.byId("MainPanel");
+		    var elem = sap.ui.getCore().byId("TopEveId--MainPanel");
 		    console.log("elem 2, ", elem);
 		    var cont = elem.getController();
 		    console.log("cont ", cont);
@@ -56,33 +73,23 @@ function InitCustomUI(handle) {
     
     handle.Connect(); // only here connection is established
     
-    
-    sap.ui.getCore().attachInit(function() {
-	new sap.m.App ({
-	    pages: [
-		new sap.m.Page({
-		    id: "idMain",
-		    title: "Eve7 test",
-		    enableScrolling : true,
-		    content: [ new sap.ui.core.ComponentContainer({
-			name : "mysplit"
-		    })]
-		})
-	    ]
-	}).placeAt("content");
-    });
+      
+     return JSROOT.AssertPrerequisites('openui5', function() {
+     
+     
+     new JSROOT.sap.ui.xmlview({
+     id: "TopEveId",
+     viewName: "mysplit.Splitter"
+     }).placeAt("EveDiv");
+     });
+
 }
 
 JSROOT.ConnectWebWindow({
-    prereq: "openui5;",
+    prereq: "openui5;v7;",
+    prereq_logdiv: "EveDiv",
     callback: InitCustomUI
 });
 
 </script>
-    </head>
-
-    <!-- UI Content -->
-    <body class="sapUiBody" id="content" role="application">
-    </body>
-
 </html>
