@@ -6,7 +6,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
 
 		      onInit: function () {
 			  console.log("summary controller !!!");
-		      }
+		      },
+                      requesetNewN:function()
+                      {
+                          console.log("requesetNewN\n");
+                      }
 		      
 		  });
 
