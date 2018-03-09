@@ -27,7 +27,8 @@
    </body>
 
  <script type='text/javascript'>
-   
+
+var globalHandle;
 function InitCustomUI(handle) {
     // from here you can use  JSROOT.sap variable like
 
@@ -38,6 +39,7 @@ function InitCustomUI(handle) {
     handle.SetReceiver({
 	OnWebsocketOpened: function(handle) {
 	    console.log('Connected');
+            globalHandle = handle;
 	    handle.Send(">>> Init msg from client TEST");
 	},
 	
@@ -86,7 +88,7 @@ function InitCustomUI(handle) {
 }
 
 JSROOT.ConnectWebWindow({
-    prereq: "openui5;v7;",
+    prereq: "openui5;",
     prereq_logdiv: "EveDiv",
     callback: InitCustomUI
 });
