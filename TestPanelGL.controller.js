@@ -2,7 +2,7 @@ sap.ui.define([
    'sap/ui/jsroot/GuiPanelController',
     'sap/ui/model/json/JSONModel',
     "sap/ui/core/ResizeHandler"
-], function (GuiPanelController, JSONModel) {
+], function (GuiPanelController, JSONModel, ResizeHandler) {
     "use strict";
 
     return GuiPanelController.extend("mysplit.TestPanelGL", {
@@ -11,7 +11,7 @@ sap.ui.define([
         onPanelInit : function() {
             var id = this.getView().getId();
             console.log("onPanelInit TestPanelGL id = " + id);            
-	   // ResizeHandler.register(this.getView(), this.onResize.bind(this));
+	    ResizeHandler.register(this.getView(), this.onResize.bind(this));
         },
         onInit : function() {
             var id = this.getView().getId();
