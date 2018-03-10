@@ -25,7 +25,7 @@
 			<Label text="Number of Points"/>
 			<Input value="{path:'/number',
                                       type:'sap.ui.model.type.Integer'}"
-                                      change="printEvent"/>
+                                      change="changeNumPoints"/>
 		</form:content>
 	</form:SimpleForm>
 

@@ -44,10 +44,10 @@ sap.ui.define([
                 var json = msg.substr(4);
                 var data = JSROOT.parse(json);
                 if (this.drawExtra(data)) {
-                    painter.Render3D();
+                   this.geo_painter.Render3D();
                 }
 
-            }
+            } 
             else {
                 console.log('FitPanel Get message ' + msg);
             }
@@ -59,6 +59,10 @@ sap.ui.define([
                 return false;
             }
             else {
+
+                 this.geo_painter.clearExtras(); // remove old three.js container with tracks and hits
+
+            
                 this.geo_painter.drawExtras(lst);
                 //console.log("draw POINTS", lst);
                 return true;

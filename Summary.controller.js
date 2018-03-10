@@ -15,15 +15,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller', "sap/ui/model/json/JSONModel"],
 
                           
 		      },
-                      requesetNewN:function()
-                      {
-                          console.log("requesetNewN\n");
-                          globalHandle.Send("changeNumPoints()"); 
-                      },
-                      printEvent:function()
+                      changeNumPoints:function()
                       {
                           console.log("printEvent ", this.amdata.number);
-                          globalHandle.Send("changeNumPoints()"); 
+                          var myJSON = "changeNumPoints " + JSON.stringify(this.amdata.number);
+                          globalHandle.Send(myJSON); 
                       }
 		      
 		  });

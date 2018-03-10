@@ -13,6 +13,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <sstream>
 
 #include "THttpServer.h"
 
@@ -55,7 +56,7 @@ REX::TEvePointSet* getPointSet(int npoints = 2, float s=2)
       ps->SetNextPoint(r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s));
    }
 
-   ps->SetMarkerColor(TMath::Nint(r.Uniform(2, 9)));
+   ps->SetMarkerColor(3);
    ps->SetMarkerSize(r.Uniform(1, 2));
    ps->SetMarkerStyle(4);
 
@@ -106,10 +107,31 @@ REX::TEvePointSet* getPointSet(int npoints = 2, float s=2)
          fConnId = 0;
          return;
       }
-   }
+      else {
+         // amat ... this should be nlohman json de-serialization ...
+         std::vector<std::string> result;
+         
+         std::istringstream iss(arg);
+         for(std::string arg; iss >> arg; )
+            result.push_back(arg);
 
-   void changeNumberOfPoints()
+         if (result.size() == 2 ) {
+            int n = atoi(result[1].c_str());
+            changeNumPoints(n);
+         }
+      }
+
+   }
+   
+   void changeNumPoints(int n)
    {
+            TList* list = new TList();
+      printf("---------------------------- changing number of points to %d ", n);
+      auto ps = getPointSet(n, 100);
+      list->Add(ps);
+      TString json = TBufferJSON::ConvertToJSON(list);
+      printf("Sending json event\n");
+      fWindow->Send(std::string("EXT:") + json.Data(), fConnId);
    }
    
    void makeWebWindow(const std::string &where = "")
