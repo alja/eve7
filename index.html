@@ -40,7 +40,6 @@ function InitCustomUI(handle) {
 	OnWebsocketOpened: function(handle) {
 	    console.log('Connected');
             globalHandle = handle;
-	    handle.Send(">>> Init msg from client TEST");
 	},
 	
 	OnWebsocketMsg: function(handle, msg) {
