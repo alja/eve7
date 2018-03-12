@@ -31,6 +31,7 @@
 #include <ROOT/TEveManager.hxx>
 #include <ROOT/TEvePointSet.hxx>
 
+//#include "json.hpp"
 
 namespace REX = ROOT::Experimental;
 
@@ -71,7 +72,7 @@ REX::TEvePointSet* getPointSet(int npoints = 2, float s=2)
          fConnId = connid;
          printf("connection established %u\n", fConnId);
          fWindow->Send("INITDONE", fConnId);
-
+         
          TRandom r(0);
          Float_t s = 100;
 
@@ -99,7 +100,7 @@ REX::TEvePointSet* getPointSet(int npoints = 2, float s=2)
             TString json = TBufferJSON::ConvertToJSON(list);
             printf("Sending json event\n");
             fWindow->Send(std::string("EXT:") + json.Data(), fConnId);
-         }
+            }
          return;
       }
       if (arg == "CONN_CLOSED") {
@@ -109,17 +110,26 @@ REX::TEvePointSet* getPointSet(int npoints = 2, float s=2)
       }
       else {
          // amat ... this should be nlohman json de-serialization ...
-         std::vector<std::string> result;
-         
-         std::istringstream iss(arg);
-         for(std::string arg; iss >> arg; )
-            result.push_back(arg);
+         /*
+         printf("parse function ...\n");
+         auto j = nlohmann::json::parse(arg);
+         std::cout << "arg " << j.dump();
+        std::cout << "functionName " << j["functionName"] << std::endl;
+        std::cout << "args " << j["args"] << std::endl;
+         printf("parse function END ...\n");
 
-         if (result.size() == 2 ) {
-            int n = atoi(result[1].c_str());
-            changeNumPoints(n);
-         }
+         char cmd[128];
+         sprintf(cmd, "%s(%d);", j["functionName"], j["args"]);
+         gROOT->ProcessLine(cmd);
+         */
+
+         char cmd[128];
+         sprintf(cmd, "((WHandler*)%p)->%s;", this, arg.c_str());
+         printf("arg: %s\ncmd: %s\n", arg.c_str(), cmd);
+         gROOT->ProcessLine(cmd);
+         //gROOT->ProcessLine(arg.c_str());
       }
+                     
 
    }
    

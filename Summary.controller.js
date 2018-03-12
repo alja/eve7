@@ -18,7 +18,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller', "sap/ui/model/json/JSONModel"],
                       changeNumPoints:function()
                       {
                           console.log("printEvent ", this.amdata.number);
-                          var myJSON = "changeNumPoints " + JSON.stringify(this.amdata.number);
+/*
+                          var ret = {
+                              "functionName":"changeNumPoints ",
+                              "args" : this.amdata
+                          }
+                          // var myJSON = "changeNumPoints " + JSON.stringify(this.amdata);
+                          var myJSON =  JSON.stringify(ret);
+*/
+                          var myJSON = "changeNumPoints(" +  this.amdata.number + ")";
+                          
                           globalHandle.Send(myJSON); 
                       }
 		      
