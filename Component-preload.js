@@ -5,7 +5,7 @@ sap.ui.define(['sap/ui/core/UIComponent'],
 	var Component = UIComponent.extend("mysplit.Component", {
 
 		metadata : {
-			rootView : "mysplit.Splitter",
+			rootView : "mysplit.Main",
 			dependencies : {
 				libs : [
 					"sap.ui.commons",
@@ -15,8 +15,8 @@ sap.ui.define(['sap/ui/core/UIComponent'],
 			config : {
 				sample : {
 					files : [
-						"Splitter.view.xml",
-					        "Splitter.controller.js",
+						"Main.view.xml",
+					        "Main.controller.js",
 					        "TestPanelGL.view.xml",
   					        "TestPanelGL.controller.js",
 					        "Summary.view.xml",

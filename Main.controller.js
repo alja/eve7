@@ -2,7 +2,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
 	function(Controller) {
 	    "use strict";
 
-	    var SplitterController = Controller.extend("mysplit.Splitter", {
+	    var SplitterController = Controller.extend("mysplit.Main", {
 
 		onInit: function () {
 		    console.log("SPLIT CONTROLLER \n");
