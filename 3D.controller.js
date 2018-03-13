@@ -1,6 +1,7 @@
 sap.ui.define([
    'sap/ui/jsroot/GuiPanelController',
-    'sap/ui/model/json/JSONModel'
+    'sap/ui/model/json/JSONModel',
+    "sap/ui/core/ResizeHandler"
 ], function (GuiPanelController, JSONModel, ResizeHandler) {
     "use strict";
 
@@ -8,13 +9,11 @@ sap.ui.define([
 
         // function called from GuiPanelController
         onPanelInit : function() {
-            var id = this.getView().getId();
-            console.log("onPanelInit 3D id = " + id);            
-	    ResizeHandler.register(this.getView(), this.onResize.bind(this));
+            console.log("onPanelInit id = ",  this.getView().getId());            
         },
         onInit : function() {
-            var id = this.getView().getId();
-            console.log("onInit AMT ???? 3D id = " + id);
+            console.log("onInit  id = ", this.getView().getId());
+	    ResizeHandler.register(this.getView(), this.onResize.bind(this));
         },
 
         // function called from GuiPanelController
@@ -29,7 +28,8 @@ sap.ui.define([
 
                 if (data) {
                     var pthis = this;
-	            JSROOT.draw("TopEveId--MainPanel--panelGL", data, "", function(painter) {
+                    var id = this.getView().getId() + "--panelGL";
+	            JSROOT.draw(id, data, "", function(painter) {
                         console.log('3D painter callback ==> painter', painter);
                         pthis.geo_painter = painter;
                         if (pthis.fast_event) pthis.drawExtra(pthis.fast_event);
