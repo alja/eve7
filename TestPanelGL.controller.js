@@ -1,7 +1,6 @@
 sap.ui.define([
    'sap/ui/jsroot/GuiPanelController',
-    'sap/ui/model/json/JSONModel',
-    "sap/ui/core/ResizeHandler"
+    'sap/ui/model/json/JSONModel'
 ], function (GuiPanelController, JSONModel, ResizeHandler) {
     "use strict";
 
@@ -63,8 +62,12 @@ sap.ui.define([
                  this.geo_painter.clearExtras(); // remove old three.js container with tracks and hits
 
             
-                this.geo_painter.drawExtras(lst);
-                //console.log("draw POINTS", lst);
+                //  this.geo_painter.drawExtras(lst);
+                for (var n=0; n< lst.arr.length; ++n) {
+                    this.geo_painter.drawHit(lst.arr[n], lst.arr[n].fName);
+                }
+                console.log(lst);
+                console.log("PAINTER ", this.geo_painter);
                 return true;
             }
         },

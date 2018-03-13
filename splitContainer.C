@@ -31,10 +31,26 @@
 #include <ROOT/TEveManager.hxx>
 #include <ROOT/TEvePointSet.hxx>
 
-//#include "json.hpp"
+#include "json.hpp"
 
 namespace REX = ROOT::Experimental;
 
+int gGUID = 0;
+int getGUID()
+{
+   return gGUID++;
+}
+
+nlohmann::json streamTEveElement(REX::TEveElement* el, int guid)
+{
+   TString flatJS = TBufferJSON::ConvertToJSON(el, gROOT->GetClass("ROOT::Experimental::TEvePointSet"));
+            
+   auto j = nlohmann::json::parse(flatJS.Data());
+   //j["name"] = el->GetElementName();
+   j["guid"] = guid;
+
+   return j;
+}
 
 
 class WHandler {
@@ -48,7 +64,7 @@ public:
    virtual ~WHandler() { printf("Destructor!!!!\n"); }
    
 
-REX::TEvePointSet* getPointSet(int npoints = 2, float s=2)
+ REX::TEvePointSet* getPointSet(int npoints = 2, float s=2, int color=4)
 {
    TRandom r(0);
    REX::TEvePointSet* ps = new REX::TEvePointSet("fu");
@@ -57,7 +73,7 @@ REX::TEvePointSet* getPointSet(int npoints = 2, float s=2)
       ps->SetNextPoint(r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s));
    }
 
-   ps->SetMarkerColor(3);
+   ps->SetMarkerColor(color);
    ps->SetMarkerSize(r.Uniform(1, 2));
    ps->SetMarkerStyle(4);
 
@@ -94,12 +110,20 @@ REX::TEvePointSet* getPointSet(int npoints = 2, float s=2)
             fWindow->Send(std::string("GEO:") + json.Data(), fConnId);
          }
          if (1) {
-            TList* list = new TList();
-            auto ps = getPointSet(200, s);
-            list->Add(ps);
-            TString json = TBufferJSON::ConvertToJSON(list);
-            printf("Sending json event\n");
-            fWindow->Send(std::string("EXT:") + json.Data(), fConnId);
+            auto ps1 = getPointSet(200, 100, 3);
+            ps1->SetElementName("PSTest_1");
+            nlohmann::json se1 = streamTEveElement(ps1, 0); //getGUID());
+
+            nlohmann::json jArr;
+            jArr["arr"] = { se1 };
+
+
+            auto ps2 = getPointSet(10, 200, 4);
+            ps2->SetElementName("PSTest_2");
+            nlohmann::json se2 = streamTEveElement(ps2, 2); //getGUID());
+            
+            jArr["arr"].push_back(se2);
+            fWindow->Send(std::string("EXT:") + jArr.dump(), fConnId);
             }
          return;
       }
@@ -137,7 +161,7 @@ REX::TEvePointSet* getPointSet(int npoints = 2, float s=2)
    {
             TList* list = new TList();
       printf("---------------------------- changing number of points to %d ", n);
-      auto ps = getPointSet(n, 100);
+      auto ps = getPointSet(n, 100, 3);
       list->Add(ps);
       TString json = TBufferJSON::ConvertToJSON(list);
       printf("Sending json event\n");
