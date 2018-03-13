@@ -15,13 +15,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                     // console.log("OnWebsocketMsg response ", msg);
                     var resp = JSON.parse(msg);
                     if (resp.function === "geometry") {
-                        var ele =  this.getView().byId("MainPanel");
+                        var ele =  this.getView().byId("3D");
                         if (!ele) return;
                         var cont = ele.getController();
                         cont[resp.function](resp.args[0]);
                     }
                     else if (resp.function === "event") {
-                        var ele =  this.getView().byId("MainPanel");
+                        var ele =  this.getView().byId("3D");
                         console.log("ele ", ele);
                         if (!ele) return;
                         var cont = ele.getController();
