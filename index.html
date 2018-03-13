@@ -26,71 +26,47 @@
       </div>
    </body>
 
- <script type='text/javascript'>
+   <script type='text/javascript'>
 
-var globalHandle;
-function InitCustomUI(handle) {
-    // from here you can use  JSROOT.sap variable like
+    function InitCustomUI(handle) {
+        // from here you can use  JSROOT.sap variable like
 
-    sap.ui.getCore().loadLibrary("sap.tnt"); 
-    jQuery.sap.registerModulePath("eve", "/currentdir/");
+        sap.ui.getCore().loadLibrary("sap.tnt"); 
+        jQuery.sap.registerModulePath("eve", "/currentdir/");
 
-    
-    handle.SetReceiver({
-	OnWebsocketOpened: function(handle) {
-	    console.log('Connected');
-            globalHandle = handle;
-	},
-	
-	OnWebsocketMsg: function(handle, msg) {
-	    console.log('>>> index.html OnWebsocketMsg  Get msg ' + msg.substring(0, 30) + ' handle ' + !!handle);
-	    //  var controllerName;
-	    var funcName;
-	    var funcArgs;
-	    for (var i = 0; i < msg.length; i++) {
-		//	 console.log(i, "----- check ",msg[i] );
-		if (msg[i] == '_') {
-		    //  controllerName =  msg.substring(0, i);
-		}
-		if (msg[i] == ':') {
-		  //  var elem = sap.ui.core.byId("MainPanel");
-		    var elem = sap.ui.getCore().byId("TopEveId--MainPanel");
-		    console.log("elem 2, ", elem);
-		    var cont = elem.getController();
-		    console.log("cont ", cont);
-                    cont["ProcessMsg"](msg);
-		    //  cont[funcName](funcArgs);
-		    // console.log(" funcName =  ", msg.substring(controllerName.length + 1, i));
-		    break;
-		}
+        
+        handle.SetReceiver({
+	    OnWebsocketOpened: function(handle) {
+	        console.log('Connected');
+	    },
+	    
+	    OnWebsocketMsg: function(handle, msg) {
+                sap.ui.getCore().byId("TopEveId").getController().OnWebsocketMsg(handle, msg);
+	    },
+	    
+	    OnWebsocketClosed: function(handle) {
+	        // when connection closed, close panel as well
+	        if (window) window.close();
 	    }
-	},
-	
-	OnWebsocketClosed: function(handle) {
-	    // when connection closed, close panel as well
-	    if (window) window.close();
-	}
+        });
+        
+        handle.Connect(); // only here connection is established
+        
+        
+        return JSROOT.AssertPrerequisites('openui5', function() {
+            new JSROOT.sap.ui.xmlview({
+                id: "TopEveId",
+                viewName: "eve.Main"
+            }).placeAt("EveDiv");
+        });
+
+    }
+
+    JSROOT.ConnectWebWindow({
+        prereq: "openui5;",
+        prereq_logdiv: "EveDiv",
+        callback: InitCustomUI
     });
-    
-    handle.Connect(); // only here connection is established
-    
-      
-     return JSROOT.AssertPrerequisites('openui5', function() {
-     
-     
-     new JSROOT.sap.ui.xmlview({
-     id: "TopEveId",
-     viewName: "eve.Main"
-     }).placeAt("EveDiv");
-     });
 
-}
-
-JSROOT.ConnectWebWindow({
-    prereq: "openui5;",
-    prereq_logdiv: "EveDiv",
-    callback: InitCustomUI
-});
-
-</script>
+   </script>
 </html>

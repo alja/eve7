@@ -21,7 +21,7 @@ sap.ui.define([
         onPanelExit : function() {
         },
 
-        ProcessMsg: function(msg) {
+        processMsg: function(msg) {
            // console.log("AMT 3D  processmsg ---->", msg);
             if (msg.indexOf("GEO:")==0) {
                 var json = msg.substr(4);

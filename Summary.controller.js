@@ -28,7 +28,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller', "sap/ui/model/json/JSONModel"],
 */
                           var myJSON = "changeNumPoints(" +  this.amdata.number + ")";
                           
-                          globalHandle.Send(myJSON); 
+                          
                       }
 		      
 		  });

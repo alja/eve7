@@ -7,18 +7,21 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
 		onInit: function () {
 		    console.log("SPLIT CONTROLLER \n");
 		},
-	        
+                getHandle: function () {
+                    return this.handle;
+                },
+	        OnWebsocketMsg: function(handle, msg) {
+                    this.handle = handle;
+                    var c =  this.byId("MainPanel").getController();
+                    console.log(".....MainPanel . ", c);
+                    c.processMsg(msg);
+                },
 		setMainVerticalSplitterHeight: function(){
-		    var mainViewHeight =screen.height;
-		    //	  
                     var mainViewHeight = document.body.clientHeight;
-                    //			  console.log(" this view ", this.getView());
 		    var mainToolbarHeight = 49;
 		    var height = mainViewHeight - mainToolbarHeight;
-		    //console.log("height >>>  " , height);
-		    
+		    //console.log("height >>>  " , height);		    
 		    var splitter =  this.getView().byId("MainAreaSplitter");
-		    // console.log("splitter dddd ", splitter);
 		    if (splitter) {
                         splitter.setHeight(height + "px");
                     }
