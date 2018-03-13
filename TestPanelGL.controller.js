@@ -4,7 +4,7 @@ sap.ui.define([
 ], function (GuiPanelController, JSONModel, ResizeHandler) {
     "use strict";
 
-    return GuiPanelController.extend("mysplit.TestPanelGL", {
+    return GuiPanelController.extend("eve.TestPanelGL", {
 
         // function called from GuiPanelController
         onPanelInit : function() {

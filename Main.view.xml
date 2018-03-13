@@ -1,4 +1,4 @@
-<mvc:View height="100%" class="sapUiSizeCompact" controllerName="mysplit.Main"
+<mvc:View height="100%" class="sapUiSizeCompact" controllerName="eve.Main"
    xmlns:mvc="sap.ui.core.mvc" xmlns:l="sap.ui.layout" xmlns="sap.m">
    <Page title="" showNavButton="false" showFooter="false"
       showSubHeader="false" id="CanvasMainPage">
@@ -78,10 +78,10 @@
       <content>
         <l:Splitter orientation="Horizontal" id="MainAreaSplitter">
           <l:contentAreas>
-	    <mvc:XMLView viewName="mysplit.Summary" height="100%">  
+	    <mvc:XMLView viewName="eve.Summary" height="100%">  
               <mvc:layoutData><l:SplitterLayoutData size="33%"/></mvc:layoutData> 
             </mvc:XMLView>  
-            <mvc:XMLView  id="MainPanel" viewName="mysplit.TestPanelGL" height="100%"/>  
+            <mvc:XMLView  id="MainPanel" viewName="eve.TestPanelGL" height="100%"/>  
           </l:contentAreas> 
         </l:Splitter>
       </content>

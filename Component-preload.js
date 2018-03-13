@@ -2,10 +2,10 @@ sap.ui.define(['sap/ui/core/UIComponent'],
 	function(UIComponent) {
 	"use strict";
 
-	var Component = UIComponent.extend("mysplit.Component", {
+	var Component = UIComponent.extend("eve.Component", {
 
 		metadata : {
-			rootView : "mysplit.Main",
+			rootView : "eve.Main",
 			dependencies : {
 				libs : [
 					"sap.ui.commons",

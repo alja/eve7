@@ -33,7 +33,7 @@ function InitCustomUI(handle) {
     // from here you can use  JSROOT.sap variable like
 
     sap.ui.getCore().loadLibrary("sap.tnt"); 
-    jQuery.sap.registerModulePath("mysplit", "/currentdir/");
+    jQuery.sap.registerModulePath("eve", "/currentdir/");
 
     
     handle.SetReceiver({
@@ -80,7 +80,7 @@ function InitCustomUI(handle) {
      
      new JSROOT.sap.ui.xmlview({
      id: "TopEveId",
-     viewName: "mysplit.Main"
+     viewName: "eve.Main"
      }).placeAt("EveDiv");
      });
 

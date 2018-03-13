@@ -1,5 +1,5 @@
 <mvc:View
-   controllerName="mysplit.TestPanelGL"
+   controllerName="eve.TestPanelGL"
    xmlns:mvc="sap.ui.core.mvc"
    xmlns:core="sap.ui.core"
    xmlns="sap.m"

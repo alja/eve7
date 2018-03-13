@@ -2,7 +2,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller', "sap/ui/model/json/JSONModel"],
 	      function(Controller, JSONModel) {
 		  "use strict";
 
-		  var SSc = Controller.extend("mysplit.Summary", {
+		  var SSc = Controller.extend("eve.Summary", {
 
                       amdata : {"number" : "123"},
 
