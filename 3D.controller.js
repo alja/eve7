@@ -4,17 +4,17 @@ sap.ui.define([
 ], function (GuiPanelController, JSONModel, ResizeHandler) {
     "use strict";
 
-    return GuiPanelController.extend("eve.TestPanelGL", {
+    return GuiPanelController.extend("eve.3D", {
 
         // function called from GuiPanelController
         onPanelInit : function() {
             var id = this.getView().getId();
-            console.log("onPanelInit TestPanelGL id = " + id);            
+            console.log("onPanelInit 3D id = " + id);            
 	    ResizeHandler.register(this.getView(), this.onResize.bind(this));
         },
         onInit : function() {
             var id = this.getView().getId();
-            console.log("onInit AMT ???? TestPanelGL id = " + id);
+            console.log("onInit AMT ???? 3D id = " + id);
         },
 
         // function called from GuiPanelController
@@ -22,7 +22,7 @@ sap.ui.define([
         },
 
         ProcessMsg: function(msg) {
-           // console.log("AMT TestPanelGL  processmsg ---->", msg);
+           // console.log("AMT 3D  processmsg ---->", msg);
             if (msg.indexOf("GEO:")==0) {
                 var json = msg.substr(4);
                 var data = JSROOT.parse(json);
@@ -30,7 +30,7 @@ sap.ui.define([
                 if (data) {
                     var pthis = this;
 	            JSROOT.draw("TopEveId--MainPanel--panelGL", data, "", function(painter) {
-                        console.log('TestPanelGL painter callback ==> painter', painter);
+                        console.log('3D painter callback ==> painter', painter);
                         pthis.geo_painter = painter;
                         if (pthis.fast_event) pthis.drawExtra(pthis.fast_event);
                         pthis.geo_painter.Render3D();

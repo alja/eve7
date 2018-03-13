@@ -1,5 +1,5 @@
 <mvc:View
-   controllerName="eve.TestPanelGL"
+   controllerName="eve.3D"
    xmlns:mvc="sap.ui.core.mvc"
    xmlns:core="sap.ui.core"
    xmlns="sap.m"

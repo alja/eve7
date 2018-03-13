@@ -81,7 +81,7 @@
 	    <mvc:XMLView viewName="eve.Summary" height="100%">  
               <mvc:layoutData><l:SplitterLayoutData size="33%"/></mvc:layoutData> 
             </mvc:XMLView>  
-            <mvc:XMLView  id="MainPanel" viewName="eve.TestPanelGL" height="100%"/>  
+            <mvc:XMLView  id="MainPanel" viewName="eve.3D" height="100%"/>  
           </l:contentAreas> 
         </l:Splitter>
       </content>
