@@ -1,12 +1,11 @@
 sap.ui.define([
-   'sap/ui/jsroot/GuiPanelController',
+    'sap/ui/jsroot/GuiPanelController',
     'sap/ui/model/json/JSONModel',
     "sap/ui/core/ResizeHandler"
 ], function (GuiPanelController, JSONModel, ResizeHandler) {
     "use strict";
 
     return GuiPanelController.extend("eve.3D", {
-
         // function called from GuiPanelController
         onPanelInit : function() {
             console.log("onPanelInit id = ",  this.getView().getId());            
@@ -19,37 +18,22 @@ sap.ui.define([
         // function called from GuiPanelController
         onPanelExit : function() {
         },
+        geometry:function(data) {
+            var pthis = this;
+            var id = this.getView().getId() + "--panelGL";
+	    JSROOT.draw(id, data, "", function(painter) {
+                console.log('3D painter initialized', painter);
+                pthis.geo_painter = painter;
+                if (pthis.fast_event) pthis.drawExtra(pthis.fast_event);
+                pthis.geo_painter.Render3D();
 
-        processMsg: function(msg) {
-           // console.log("AMT 3D  processmsg ---->", msg);
-            if (msg.indexOf("GEO:")==0) {
-                var json = msg.substr(4);
-                var data = JSROOT.parse(json);
-
-                if (data) {
-                    var pthis = this;
-                    var id = this.getView().getId() + "--panelGL";
-	            JSROOT.draw(id, data, "", function(painter) {
-                        console.log('3D painter callback ==> painter', painter);
-                        pthis.geo_painter = painter;
-                        if (pthis.fast_event) pthis.drawExtra(pthis.fast_event);
-                        pthis.geo_painter.Render3D();
-
-		    });
-                }
+	    });
+        },
+        event: function(data) {
+            if (this.drawExtra(data)) {
+                this.geo_painter.Render3D();
             }
-            
-            else if (msg.indexOf("EXT:")==0) {
-                var json = msg.substr(4);
-                var data = JSROOT.parse(json);
-                if (this.drawExtra(data)) {
-                   this.geo_painter.Render3D();
-                }
 
-            } 
-            else {
-                console.log('FitPanel Get message ' + msg);
-            }
         },
         drawExtra : function(lst) {
             if (!this.geo_painter) {
@@ -58,10 +42,7 @@ sap.ui.define([
                 return false;
             }
             else {
-
-                 this.geo_painter.clearExtras(); // remove old three.js container with tracks and hits
-
-            
+                this.geo_painter.clearExtras(); // remove old three.js container with tracks and hits
                 //  this.geo_painter.drawExtras(lst);
                 for (var n=0; n< lst.arr.length; ++n) {
                     this.geo_painter.drawHit(lst.arr[n], lst.arr[n].fName);
@@ -73,7 +54,7 @@ sap.ui.define([
         },
 	onResize: function(event) {
             // use timeout
-            console.log("resize painter")
+            // console.log("resize painter")
             if (this.resize_tmout) clearTimeout(this.resize_tmout);
             this.resize_tmout = setTimeout(this.onResizeTimeout.bind(this), 300); // minimal latency
 	},
@@ -82,7 +63,6 @@ sap.ui.define([
             delete this.resize_tmout;
             if (this.geo_painter) {
 		this.geo_painter.CheckResize();
-		console.log("geo painter check resize ");
 	    }
 	}
 

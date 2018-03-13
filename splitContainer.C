@@ -87,7 +87,7 @@ public:
        if (arg == "CONN_READY") {
          fConnId = connid;
          printf("connection established %u\n", fConnId);
-         fWindow->Send("INITDONE", fConnId);
+         //         fWindow->Send("INITDONE", fConnId);
          
          TRandom r(0);
          Float_t s = 100;
@@ -105,9 +105,16 @@ public:
             delete geom;
 
 
-            TString json = TBufferJSON::ConvertToJSON(gse, gROOT->GetClass("ROOT::Experimental::TEveGeoShapeExtract"));
+            TString jsonGeo = TBufferJSON::ConvertToJSON(gse, gROOT->GetClass("ROOT::Experimental::TEveGeoShapeExtract"));
+
+
+            nlohmann::json j;
+            //j["controllers"] = {"3D"};
+            j["function"] = "geometry";
+            j["args"] = {nlohmann::json::parse(jsonGeo.Data())};
+               
             printf("Sending geo json \n");
-            fWindow->Send(std::string("GEO:") + json.Data(), fConnId);
+            fWindow->Send(j.dump(), fConnId);
          }
          if (1) {
             auto ps1 = getPointSet(200, 100, 3);
@@ -123,7 +130,13 @@ public:
             nlohmann::json se2 = streamTEveElement(ps2, 2); //getGUID());
             
             jArr["arr"].push_back(se2);
-            fWindow->Send(std::string("EXT:") + jArr.dump(), fConnId);
+
+            nlohmann::json j;
+            //j["controllers"] = {"3D"};
+            j["function"] = "event";
+            j["args"] = { jArr } ;
+            
+            fWindow->Send(j.dump(), fConnId);
             }
          return;
       }
@@ -133,19 +146,6 @@ public:
          return;
       }
       else {
-         // amat ... this should be nlohman json de-serialization ...
-         /*
-         printf("parse function ...\n");
-         auto j = nlohmann::json::parse(arg);
-         std::cout << "arg " << j.dump();
-        std::cout << "functionName " << j["functionName"] << std::endl;
-        std::cout << "args " << j["args"] << std::endl;
-         printf("parse function END ...\n");
-
-         char cmd[128];
-         sprintf(cmd, "%s(%d);", j["functionName"], j["args"]);
-         gROOT->ProcessLine(cmd);
-         */
 
          char cmd[128];
          sprintf(cmd, "((WHandler*)%p)->%s;", this, arg.c_str());
