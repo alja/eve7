@@ -7,6 +7,8 @@
     >   
   <Page showHeader="false" >
     <content>
+      <Tree id="tree">
+      </Tree>
       <VBox>
 
 	<form:SimpleForm

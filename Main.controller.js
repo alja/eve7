@@ -21,11 +21,20 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                         cont[resp.function](resp.args[0]);
                     }
                     else if (resp.function === "event") {
+                        {
                         var ele =  this.getView().byId("3D");
                         console.log("ele ", ele);
                         if (!ele) return;
                         var cont = ele.getController();
-                        cont[resp.function](resp.args[0]);
+                            cont[resp.function](resp.args[0]);
+                        }
+                        {
+                        var ele =  this.getView().byId("Summary");
+                        console.log("ele ", ele);
+                        if (!ele) return;
+                        var cont = ele.getController();
+                            cont[resp.function](resp.args[0]);
+                        }
                     }
                 },
 		setMainVerticalSplitterHeight: function(){
