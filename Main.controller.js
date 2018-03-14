@@ -30,7 +30,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                         }
                         {
                         var ele =  this.getView().byId("Summary");
-                        console.log("ele ", ele);
+                        console.log("ele Sum", ele);
                         if (!ele) return;
                         var cont = ele.getController();
                             cont[resp.function](resp.args[0]);

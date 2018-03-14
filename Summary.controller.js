@@ -9,33 +9,8 @@ sap.ui.define([
             
             	 var data = [
 	     {
-		 text: "A-Node",
- 		 nodes: [
- 		     {
- 			 text: "A-Node1"
- 		     },
- 		     {
- 			 text: "A-Node2"
- 		     },
- 		     {
- 			 text: "A-Node3"
- 		     }
- 		 ]
-	     },
- 	     {
- 		 text: "B-Node",
- 		 nodes: [
- 		     {
-			 somethingDifferent: "515",
- 			 text: "B-Node1",
-                         selected: Boolean(1)
- 		     },
- 		     {
- 			 
- 			 text: "B-Node2"
- 		     }
- 		 ]
- 	     }
+		 text: "Event"
+	     }
  	         ];
             
             var oTree = this.getView().byId("tree");
@@ -51,17 +26,30 @@ sap.ui.define([
                 type: sap.m.ListType.Detail
 	    });
 	    oTree.bindItems("myModelName>/", oStandardTreeItem);
-
+            this.tree = oTree;
+            this.model = oModel;
             
 	},
-        event: function(list) { 
+        event: function(lst) { 
+            console.log("summary event lst \n", lst);
+            var oTreeData = [];
+            
+            for (var n=0; n< lst.arr.length; ++n) {
+                var el = {text : lst.arr[n].fName , uid : lst.arr[n].guid };
+                oTreeData.push(el);
+            }
+            var eventData = { "text" : "Event", "uid" : 77, nodes : oTreeData};
+            console.log("event model ", eventData);
 
-
-
-
-
+            this.model.setData([]);
+            this.model.setData([eventData]);
+            this.model.refresh(true);
 
             
+        },
+        onItemPressed: function(oEvent)
+        {
+	    console.log("path", oEvent.getParameter("listItem").getBindingContext("myModelName").getPath());	
         },
         changeNumPoints:function()
         {
