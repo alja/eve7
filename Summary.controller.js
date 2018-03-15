@@ -81,8 +81,8 @@ sap.ui.define([
         },
         changeNumPoints:function()
         {
-            console.log("printEvent ", this.amdata.number);
-            
+            var myJSON = "changeNumPoints(" +  this.editorElement.guid + ", "  + this.editorElement.fN +  ")";                          
+            globalHandle.Send(myJSON); 
         },
 	printEvent: function(event)
         {  
@@ -95,7 +95,7 @@ sap.ui.define([
             console.log("obj ",object );
             alert("You have change : "+ path + " = " + object + " element " + JSON.stringify(this.editorElement));
 
-            
+            changeNumPoints();
         }
     });
 
