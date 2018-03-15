@@ -43,19 +43,24 @@ sap.ui.define([
             var oTreeData = [];
             
             for (var n=0; n< lst.arr.length; ++n) {
-                var el = {fName : lst.arr[n].fName , uid : lst.arr[n].guid };
+                var el = {fName : lst.arr[n].fName , guid : lst.arr[n].guid, _typename :  lst.arr[n]._typename};
                 oTreeData.push(el);
             }
 
-            var eventData = { "fName" : "Event", "uid" : 77, "arr" : oTreeData};
+            var eventData = { "fName" : lst.fName, "guid" : lst.guid, "arr" : oTreeData, _typename: lst._typename};
             console.log("event model ", eventData);
 
             this.model.setData([]);
             this.model.setData([eventData]);
             this.model.refresh(true);
             this.tree.expandToLevel(3);
+	         sap.ui.getCore().setModel(this.model, "myModelName");
 
             
+                 this.oProductModel = new sap.ui.model.json.JSONModel();
+	         this.oProductModel.setData([this.event]);
+	         sap.ui.getCore().setModel(this.oProductModel, "event");
+
         },
         
         onItemPressed: function(oEvent)
@@ -64,6 +69,13 @@ sap.ui.define([
 	    var path =  oEvent.getParameter("listItem").getBindingContext("myModelName").getPath();
             path = path.substring(3);
     	    console.log("deep val ", deep_value(this.event, path));
+            this.editorElement = deep_value(this.event, path);
+
+            var eventPath = oEvent.getParameter("listItem").getBindingContext("myModelName").getPath();
+          //  eventPath="/arr/1";
+	    var oProductDetailPanel = this.byId("productDetailsPanel");
+            console.log("event path ", eventPath);
+	    oProductDetailPanel.bindElement({ path: eventPath, model: "event" });
 
             
         },
@@ -71,8 +83,20 @@ sap.ui.define([
         {
             console.log("printEvent ", this.amdata.number);
             
+        },
+	printEvent: function(event)
+        {  
+            var propertyPath = event.getSource().getBinding("value").getPath();
+            console.log("property path ", propertyPath);
+            var bindingContext = event.getSource().getBindingContext("event");
+
+            var path =  bindingContext.getPath(propertyPath);
+            var object =  bindingContext.getObject(propertyPath);
+            console.log("obj ",object );
+            alert("You have change : "+ path + " = " + object + " element " + JSON.stringify(this.editorElement));
+
+            
         }
-	
     });
 
 });

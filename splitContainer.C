@@ -123,6 +123,9 @@ public:
 
             nlohmann::json jArr;
             jArr["arr"] = { se1 };
+            jArr["guid"] = "77";
+            jArr["_typename"] = "unknown";
+            jArr["fName"] = "EventHolder";
 
 
             auto ps2 = getPointSet(10, 200, 4);

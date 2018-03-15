@@ -3,35 +3,22 @@
     xmlns:mvc="sap.ui.core.mvc"
     xmlns:core="sap.ui.core"
     xmlns:form="sap.ui.layout.form"
+    xmlns:l="sap.ui.layout"
     xmlns="sap.m"
     >   
-  <Page showHeader="false" >
+  <Panel >
     <content>
       <Tree id="tree" itemPress="onItemPressed">
       </Tree>
-      <VBox>
-
-	<form:SimpleForm
-		width="auto"
-		class="sapUiResponsiveMargin"
-		layout="ResponsiveGridLayout"
-		editable="true"
-		labelSpanL="3"
-		labelSpanM="3"
-		emptySpanL="4"
-		emptySpanM="4"
-		columnsL="1"
-		columnsM="1"
-		title="PointSet">
-		<form:content>
-			<Label text="Number of Points"/>
-			<Input value="{path:'/number',
-                                      type:'sap.ui.model.type.Integer'}"
-                                      change="changeNumPoints"/>
-		</form:content>
-	</form:SimpleForm>
-
-      </VBox>
     </content>
-  </Page>
+  </Panel>
+  <Panel id="productDetailsPanel" headerText="EveElement Editor" class="sapUiResponsiveMargin" >
+			<VBox>
+
+      <Input description="Name" value="{event>fName}" change="printEvent"/>
+      <Input description="Number Of points" value="{event>fN}" change="printEvent"/>
+
+    </VBox>
+  </Panel>
+
 </mvc:View>
