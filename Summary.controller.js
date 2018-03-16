@@ -37,7 +37,7 @@ sap.ui.define([
             
 	},
         event: function(lst) {
-            this.event = lst;
+            this._event = lst;
             console.log("summary event lst \n", lst);
             
             var oTreeData = [];
@@ -58,7 +58,7 @@ sap.ui.define([
 
             
                  this.oProductModel = new sap.ui.model.json.JSONModel();
-	         this.oProductModel.setData([this.event]);
+	         this.oProductModel.setData([this._event]);
 	         sap.ui.getCore().setModel(this.oProductModel, "event");
 
         },
@@ -68,8 +68,8 @@ sap.ui.define([
 	    //console.log("path", oEvent.getParameter("listItem").getBindingContext("myModelName").getPath());
 	    var path =  oEvent.getParameter("listItem").getBindingContext("myModelName").getPath();
             path = path.substring(3);
-    	    console.log("deep val ", deep_value(this.event, path));
-            this.editorElement = deep_value(this.event, path);
+    	    console.log("deep val ", deep_value(this._event, path));
+            this.editorElement = deep_value(this._event, path);
 
             var eventPath = oEvent.getParameter("listItem").getBindingContext("myModelName").getPath();
           //  eventPath="/arr/1";
@@ -93,7 +93,7 @@ sap.ui.define([
             var path =  bindingContext.getPath(propertyPath);
             var object =  bindingContext.getObject(propertyPath);
             console.log("obj ",object );
-            alert("You have change : "+ path + " = " + object + " element " + JSON.stringify(this.editorElement));
+           // alert("You have change : "+ path + " = " + object + " element " + JSON.stringify(this.editorElement));
 
             this.changeNumPoints();
         }

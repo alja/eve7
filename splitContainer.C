@@ -83,7 +83,6 @@ public:
        if (arg == "CONN_READY") {
          fConnId = connid;
          printf("connection established %u\n", fConnId);
-         //         fWindow->Send("INITDONE", fConnId);
          
          TRandom r(0);
          Float_t s = 100;
@@ -160,27 +159,30 @@ public:
 
    }
    
-   void changeNumPoints(int id, int n)
+   void changeNumPoints(int id, int numPnts)
    {
       REX::TEveElementList::List_i it = eventList->BeginChildren();
-      for (int i = 0; i < n; i++) it++;
+ 
+      if (id >=  eventList->NumChildren()) {
+         printf("error: changeNumPoints not an valid id !!! \n");
+         return;
+      }
+      for (int i = 0; i < id; i++) it++;
 
       REX::TEvePointSet* ps = (REX::TEvePointSet*)(*it);
-      ps->Reset();
+      ps->Reset(numPnts, 0);
       
       TRandom r(0);
       float s = r.Uniform(10, 200);
-      for (Int_t i=0; i<n; ++i)
+      for (Int_t i=0; i<numPnts; ++i)
       {
          ps->SetNextPoint(r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s));
       }
-    
       nlohmann::json j;
       j["function"] = "replaceElement";
       j["element"] =   streamTEveElement(ps, id);
 
-      printf("Request replaceElement %s \n", j.dump().c_str());
-      fWindow->Send(j.dump(), fConnId);  
+      fWindow->Send(j.dump(), fConnId);
    }
    
    void makeWebWindow(const std::string &where = "")
