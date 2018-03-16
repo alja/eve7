@@ -15,7 +15,7 @@
   <Panel id="productDetailsPanel" headerText="EveElement Editor" class="sapUiResponsiveMargin" >
 			<VBox>
 
-      <Input description="Name" value="{event>fName}" change="printEvent"/>
+      <Input description="Name" value="{event>fName}" change="printEvent" enabled="false" />
       <Input description="Number Of points" value="{event>fN}" change="printEvent"/>
 
     </VBox>

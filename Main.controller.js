@@ -21,6 +21,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                         cont[resp.function](resp.args[0]);
                     }
                     else if (resp.function === "event") {
+                        this.event = resp.args[0];
                         {
                         var ele =  this.getView().byId("3D");
                         console.log("ele ", ele);
@@ -35,6 +36,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                         var cont = ele.getController();
                             cont[resp.function](resp.args[0]);
                         }
+                    }
+                    else if (resp.function === "replaceElement") {
+                        console.log("replace element ", msg);
+                        // find the element with guid in the event ... currently one level
+                        var id = resp.element.guid;
+                        console.log("going to change ele ", id);
                     }
                 },
 		setMainVerticalSplitterHeight: function(){

@@ -35,11 +35,6 @@
 
 namespace REX = ROOT::Experimental;
 
-int gGUID = 0;
-int getGUID()
-{
-   return gGUID++;
-}
 
 nlohmann::json streamTEveElement(REX::TEveElement* el, int guid)
 {
@@ -52,6 +47,7 @@ nlohmann::json streamTEveElement(REX::TEveElement* el, int guid)
    return j;
 }
 
+REX::TEveElementList* eventList = 0;
 
 class WHandler {
 private:
@@ -130,7 +126,7 @@ public:
 
             auto ps2 = getPointSet(10, 200, 4);
             ps2->SetElementName("PSTest_2");
-            nlohmann::json se2 = streamTEveElement(ps2, 2); //getGUID());
+            nlohmann::json se2 = streamTEveElement(ps2, 1); //getGUID());
             
             jArr["arr"].push_back(se2);
 
@@ -140,6 +136,10 @@ public:
             j["args"] = { jArr } ;
             
             fWindow->Send(j.dump(), fConnId);
+
+            eventList = new REX::TEveElementList("Event");
+            eventList->AddElement(ps1);
+            eventList->AddElement(ps2);
             }
          return;
       }
@@ -160,15 +160,27 @@ public:
 
    }
    
-   void changeNumPoints(int n)
+   void changeNumPoints(int id, int n)
    {
-            TList* list = new TList();
-      printf("---------------------------- changing number of points to %d ", n);
-      auto ps = getPointSet(n, 100, 3);
-      list->Add(ps);
-      TString json = TBufferJSON::ConvertToJSON(list);
-      printf("Sending json event\n");
-      fWindow->Send(std::string("EXT:") + json.Data(), fConnId);
+      REX::TEveElementList::List_i it = eventList->BeginChildren();
+      for (int i = 0; i < n; i++) it++;
+
+      REX::TEvePointSet* ps = (REX::TEvePointSet*)(*it);
+      ps->Reset();
+      
+      TRandom r(0);
+      float s = r.Uniform(10, 200);
+      for (Int_t i=0; i<n; ++i)
+      {
+         ps->SetNextPoint(r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s));
+      }
+    
+      nlohmann::json j;
+      j["function"] = "replaceElement";
+      j["element"] =   streamTEveElement(ps, id);
+
+      printf("Request replaceElement %s \n", j.dump().c_str());
+      fWindow->Send(j.dump(), fConnId);  
    }
    
    void makeWebWindow(const std::string &where = "")
