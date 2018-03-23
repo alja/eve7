@@ -199,8 +199,25 @@ public:
 
       fWindow->SetGeometry(300, 500); // configure predefined geometry 
 
+      fWindow->SetConnLimit(100);
+   
       std::string url = fWindow->GetUrl(true);
-      
+      printSshForward(url);
+   }
+
+
+   void printSshForward(std::string url)
+   {
+      // printf("URL=%s\n", url.c_str());
+      auto x = url.substr(7, url.length() - url.find("/web7gui/win1/") );
+      auto port  = x.substr(x.find(':')+1);
+      int localport = 1234;
+      // printf("port %s\n", port.c_str());
+      // printf("hostname %s\n", gSystem->HostName());
+      printf("FORWARD port %s -> %d ########################### \n", port.c_str(), localport);
+      printf("ssh -f -L %d:localhost:%s %s sleep 10000\n",localport, port.c_str(), gSystem->HostName() );
+      printf("URL ###############################\n");
+      printf("http://localhost:%d/web7gui/win1/\n", localport);
    }
 
 };
