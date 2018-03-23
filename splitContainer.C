@@ -6,7 +6,6 @@
 ///
 /// \macro_code
 ///
-/// \author Sergey Linev
 
 
 
@@ -35,6 +34,12 @@
 
 namespace REX = ROOT::Experimental;
 
+struct Conn {
+   unsigned m_id;
+
+   Conn(): m_id(0) {}
+   Conn(unsigned int cId) : m_id(cId) {}
+};
 
 nlohmann::json streamTEveElement(REX::TEveElement* el, int guid)
 {
@@ -52,7 +57,7 @@ REX::TEveElementList* eventList = 0;
 class WHandler {
 private:
    std::shared_ptr<ROOT::Experimental::TWebWindow>  fWindow;
-   unsigned fConnId{0};
+   std::vector<Conn> m_connList;
 
 public:
    WHandler() {};
@@ -60,42 +65,42 @@ public:
    virtual ~WHandler() { printf("Destructor!!!!\n"); }
    
 
- REX::TEvePointSet* getPointSet(int npoints = 2, float s=2, int color=4)
-{
-   TRandom r(0);
-   REX::TEvePointSet* ps = new REX::TEvePointSet("fu");
-   for (Int_t i=0; i<npoints; ++i)
+   REX::TEvePointSet* getPointSet(int npoints = 2, float s=2, int color=4)
    {
-      ps->SetNextPoint(r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s));
+      TRandom r(0);
+      REX::TEvePointSet* ps = new REX::TEvePointSet("fu");
+      for (Int_t i=0; i<npoints; ++i)
+      {
+         ps->SetNextPoint(r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s));
+      }
+
+      ps->SetMarkerColor(color);
+      ps->SetMarkerSize(r.Uniform(1, 2));
+      ps->SetMarkerStyle(4);
+
+      return ps;
    }
-
-   ps->SetMarkerColor(color);
-   ps->SetMarkerSize(r.Uniform(1, 2));
-   ps->SetMarkerStyle(4);
-
-   return ps;
-}
 
 
    void ProcessData(unsigned connid, const std::string &arg)
    {
       printf("ProcessData %s >>>>>>>  \n", arg.c_str());
-       if (arg == "CONN_READY") {
-         fConnId = connid;
-         printf("connection established %u\n", fConnId);
+      if (arg == "CONN_READY") {
+         m_connList.push_back(Conn(connid));
+         printf("connection established %u\n", connid);
          
          TRandom r(0);
          Float_t s = 100;
 
          if (1) {
             //            TFile* geom =  TFile::Open("http://mtadel.home.cern.ch/mtadel/root/alice_mini_geom.root","CACHEREAD");
-               TFile* geom =  TFile::Open("http://amraktad.web.cern.ch/amraktad/root/fake7geo.root", "CACHEREAD");
+            TFile* geom =  TFile::Open("http://amraktad.web.cern.ch/amraktad/root/fake7geo.root", "CACHEREAD");
             //TFile* geom =  TFile::Open("fake7geo.root", "CACHEREAD");
                            
             if (!geom)
                return;
             auto gse = (ROOT::Experimental::TEveGeoShapeExtract*) geom->Get("Extract");
-           auto gentle_geom = ROOT::Experimental::TEveGeoShape::ImportShapeExtract(gse, 0);
+            auto gentle_geom = ROOT::Experimental::TEveGeoShape::ImportShapeExtract(gse, 0);
             geom->Close();
             delete geom;
 
@@ -109,7 +114,7 @@ public:
             j["args"] = {nlohmann::json::parse(jsonGeo.Data())};
                
             printf("Sending geo json \n");
-            fWindow->Send(j.dump(), fConnId);
+            fWindow->Send(j.dump(), connid);
          }
          if (1) {
             auto ps1 = getPointSet(200, 100, 3);
@@ -134,17 +139,34 @@ public:
             j["function"] = "event";
             j["args"] = { jArr } ;
             
-            fWindow->Send(j.dump(), fConnId);
+            fWindow->Send(j.dump(), connid);
 
             eventList = new REX::TEveElementList("Event");
             eventList->AddElement(ps1);
             eventList->AddElement(ps2);
-            }
+         }
          return;
       }
+
+      // find connection object
+      std::vector<Conn>::iterator conn =  m_connList.end();
+      for (auto i = m_connList.begin(); i != m_connList.end(); ++i)
+      {
+         if (i->m_id == connid)
+         {
+            conn = i;
+            break;
+         }
+      }
+      // this should not happen, just check
+      if (conn == m_connList.end()) {
+         printf("error, conenction not found!");
+         return;
+      }
+       
       if (arg == "CONN_CLOSED") {
          printf("connection closed\n");
-         fConnId = 0;
+         m_connList.erase(conn);
          return;
       }
       else {
@@ -181,8 +203,10 @@ public:
       nlohmann::json j;
       j["function"] = "replaceElement";
       j["element"] =   streamTEveElement(ps, id);
-
-      fWindow->Send(j.dump(), fConnId);
+      for (auto i = m_connList.begin(); i != m_connList.end(); ++i)
+      {
+         fWindow->Send(j.dump(), i->m_id);
+      }
    }
    
    void makeWebWindow(const std::string &where = "")
@@ -227,9 +251,9 @@ WHandler* handler = nullptr;
 
 void splitContainer()
 {
-     gSystem->Load("libROOTEve");
-     REX::TEveManager::Create();
+   gSystem->Load("libROOTEve");
+   REX::TEveManager::Create();
    
-     handler = new WHandler();
+   handler = new WHandler();
    handler->makeWebWindow();
 }
