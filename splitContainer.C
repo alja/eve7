@@ -84,7 +84,6 @@ public:
 
    void ProcessData(unsigned connid, const std::string &arg)
    {
-      printf("ProcessData %s >>>>>>>  \n", arg.c_str());
       if (arg == "CONN_READY") {
          m_connList.push_back(Conn(connid));
          printf("connection established %u\n", connid);
@@ -232,15 +231,16 @@ public:
 
    void printSshForward(std::string url)
    {
-      // printf("URL=%s\n", url.c_str());
-      auto x = url.substr(7, url.length() - url.find("/web7gui/win1/") );
+      printf("original URL=%s\n", url.c_str());
+      auto x = url.substr(0,  url.find("/web7gui/win1/") );
+      x=x.substr(7);
       auto port  = x.substr(x.find(':')+1);
+
       int localport = 1234;
       // printf("port %s\n", port.c_str());
       // printf("hostname %s\n", gSystem->HostName());
-      printf("FORWARD port %s -> %d ########################### \n", port.c_str(), localport);
+      printf("SSH TUNNEL  ########################### \n");//, port.c_str(), localport);
       printf("ssh -f -L %d:localhost:%s %s sleep 10000\n",localport, port.c_str(), gSystem->HostName() );
-      printf("URL ###############################\n");
       printf("http://localhost:%d/web7gui/win1/\n", localport);
    }
 
