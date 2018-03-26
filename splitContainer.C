@@ -208,7 +208,7 @@ public:
       }
    }
    
-   void makeWebWindow(const std::string &where = "")
+   void makeWebWindow(const std::string &where = "", bool printSShFw = false)
    {
 
       fWindow =  ROOT::Experimental::TWebWindowsManager::Instance()->CreateWindow(gROOT->IsBatch());
@@ -225,7 +225,7 @@ public:
       fWindow->SetConnLimit(100);
    
       std::string url = fWindow->GetUrl(true);
-      printSshForward(url);
+      if (printSShFw) printSshForward(url);
    }
 
 
@@ -249,11 +249,11 @@ public:
 
 WHandler* handler = nullptr;
 
-void splitContainer()
+void splitContainer(bool printSShFw = false)
 {
    gSystem->Load("libROOTEve");
    REX::TEveManager::Create();
    
    handler = new WHandler();
-   handler->makeWebWindow();
+   handler->makeWebWindow(printSShFw);
 }
