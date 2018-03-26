@@ -255,5 +255,5 @@ void splitContainer(bool printSShFw = false)
    REX::TEveManager::Create();
    
    handler = new WHandler();
-   handler->makeWebWindow(printSShFw);
+   handler->makeWebWindow("", printSShFw);
 }
