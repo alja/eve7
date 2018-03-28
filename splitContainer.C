@@ -265,7 +265,12 @@ public:
       fWindow->SetConnLimit(100);
    
       std::string url = fWindow->GetUrl(true);
-      if (printSShFw) printSshForward(url);
+      if (printSShFw) {
+         printSshForward(url);
+      }
+      else {
+         printf("URL %s\n", url.c_str());
+      }
    }
 
 
