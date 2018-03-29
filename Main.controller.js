@@ -26,11 +26,20 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                         this.event();
                     }
                     else if (resp.function === "replaceElement") {
-                        console.log("replace element ", msg);
+                        console.log("replace element ", resp);
                         // find the element with guid in the event ... currently one level
                         var id = resp.element.guid;
                         console.log("going to change ele ", id);
-                        this._event.arr[id] = resp.element;
+                        console.log("searching for id in event ", this._event);
+                        // AMT this should be recursive
+                        for (var i=0; i < this._event.arr.length; ++i)
+                        {
+                            if (id == this._event.arr[i].guid) {
+                                console.log("replace 1 ",  this._event.arr[i],  " with ", resp.element);
+                               this._event.arr[i] = resp.element;
+                            }
+                        }
+                      //  this._event.arr[id] = resp.element;
                         // this.event(this._event)
                         this.event();
                     }

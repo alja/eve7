@@ -52,6 +52,15 @@ struct Conn {
 };
 
 
+   void streamSingleEveElement(REX::TEveElement* el,nlohmann::json& jsonParent )
+   {
+      TString flatJS = TBufferJSON::ConvertToJSON(el, el->IsA());  
+      nlohmann::json cj =  nlohmann::json::parse(flatJS.Data());
+      cj["guid"] = el->GetElementId();
+      jsonParent["element"] = cj; 
+   }
+
+
 class WHandler {
 private:
    std::shared_ptr<ROOT::Experimental::TWebWindow>  fWindow;
@@ -69,8 +78,8 @@ public:
       
       TString flatJS = TBufferJSON::ConvertToJSON(el, el->IsA());  
       nlohmann::json cj =  nlohmann::json::parse(flatJS.Data());
+      cj["guid"] = el->GetElementId();
       jsonParent["arr"].push_back(cj);
-
       
       cj["arr"] =  nlohmann::json::array();
       // printf(" stream >>>>>> %s %d parent = %s \n", el->GetElementName(),  el->NumChildren(), jsonParent.dump().c_str());
@@ -143,16 +152,9 @@ public:
    }
    
    void changeNumPoints(int id, int numPnts)
-   {/*
-      REX::TEveElementList::List_i it = eventList->BeginChildren();
- 
-      if (id >=  eventList->NumChildren()) {
-         printf("error: changeNumPoints not an valid id !!! \n");
-         return;
-      }
-      for (int i = 0; i < id; i++) it++;
+   {
 
-      REX::TEvePointSet* ps = (REX::TEvePointSet*)(*it);
+      REX::TEvePointSet* ps = (REX::TEvePointSet*)(eveMng->FindElementById(id));
       ps->Reset(numPnts, 0);
       
       TRandom r(0);
@@ -163,12 +165,11 @@ public:
       }
       nlohmann::json j;
       j["function"] = "replaceElement";
-      j["element"] =   streamTEveElement(ps, id);
+      streamSingleEveElement(ps, j);
       for (auto i = m_connList.begin(); i != m_connList.end(); ++i)
       {
          fWindow->Send(j.dump(), i->m_id);
       }
-    */
    }
    
    void makeWebWindow(const std::string &where = "", bool printSShFw = false)
