@@ -28,14 +28,21 @@
 #include <ROOT/TWebWindowsManager.hxx>
 #include <ROOT/TEveGeoShapeExtract.hxx>
 #include <ROOT/TEveGeoShape.hxx>
+#include <ROOT/TEveScene.hxx>
+#include <ROOT/TEveElement.hxx>
 #include <ROOT/TEveManager.hxx>
 #include <ROOT/TEvePointSet.hxx>
+
 #include <ROOT/TEveTrack.hxx>
 #include <ROOT/TEveTrackPropagator.hxx>
 
 #include "json.hpp"
 
 namespace REX = ROOT::Experimental;
+
+// globals
+REX::TEveGeoShapeExtract* geo = 0;
+REX::TEveManager* eveMng = 0;
 
 struct Conn {
    unsigned m_id;
@@ -44,18 +51,6 @@ struct Conn {
    Conn(unsigned int cId) : m_id(cId) {}
 };
 
-nlohmann::json streamTEveElement(REX::TEveElement* el, int guid)
-{
-   TString flatJS = TBufferJSON::ConvertToJSON(el, gROOT->GetClass("ROOT::Experimental::TEvePointSet"));
-            
-   auto j = nlohmann::json::parse(flatJS.Data());
-   //j["name"] = el->GetElementName();
-   j["guid"] = guid;
-
-   return j;
-}
-
-REX::TEveElementList* eventList = 0;
 
 class WHandler {
 private:
@@ -68,22 +63,23 @@ public:
    virtual ~WHandler() { printf("Destructor!!!!\n"); }
    
 
-   REX::TEvePointSet* getPointSet(int npoints = 2, float s=2, int color=4)
+   void streamEveElement(REX::TEveElement* el,nlohmann::json& jsonParent )
    {
-      TRandom r(0);
-      REX::TEvePointSet* ps = new REX::TEvePointSet("fu");
-      for (Int_t i=0; i<npoints; ++i)
+      // printf("BEGIN stream element %s \n", el->GetElementName() );
+      
+      TString flatJS = TBufferJSON::ConvertToJSON(el, el->IsA());  
+      nlohmann::json cj =  nlohmann::json::parse(flatJS.Data());
+      jsonParent["arr"].push_back(cj);
+
+      
+      cj["arr"] =  nlohmann::json::array();
+      // printf(" stream >>>>>> %s %d parent = %s \n", el->GetElementName(),  el->NumChildren(), jsonParent.dump().c_str());
+      for (auto it =  el->BeginChildren(); it != el->EndChildren(); ++it)
       {
-         ps->SetNextPoint(r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s));
-      }
-
-      ps->SetMarkerColor(color);
-      ps->SetMarkerSize(r.Uniform(1, 2));
-      ps->SetMarkerStyle(4);
-
-      return ps;
+         // printf(".... stream child %s of parent %s \n", (*it)->GetElementName(), el->GetElementName());
+         streamEveElement(*it,  jsonParent["arr"][0]);
+      }      
    }
-
 
    void ProcessData(unsigned connid, const std::string &arg)
    {
@@ -91,98 +87,24 @@ public:
          m_connList.push_back(Conn(connid));
          printf("connection established %u\n", connid);
          
-         TRandom r(0);
-         Float_t s = 100;
 
          if (1) {
-            //            TFile* geom =  TFile::Open("http://mtadel.home.cern.ch/mtadel/root/alice_mini_geom.root","CACHEREAD");
-            TFile* geom =  TFile::Open("http://amraktad.web.cern.ch/amraktad/root/fake7geo.root", "CACHEREAD");
-            //TFile* geom =  TFile::Open("fake7geo.root", "CACHEREAD");
-                           
-            if (!geom)
-               return;
-            auto gse = (ROOT::Experimental::TEveGeoShapeExtract*) geom->Get("Extract");
-            auto gentle_geom = ROOT::Experimental::TEveGeoShape::ImportShapeExtract(gse, 0);
-            geom->Close();
-            delete geom;
-
-
-            TString jsonGeo = TBufferJSON::ConvertToJSON(gse, gROOT->GetClass("ROOT::Experimental::TEveGeoShapeExtract"));
-
-
+            TString jsonGeo = TBufferJSON::ConvertToJSON(geo, gROOT->GetClass("ROOT::Experimental::TEveGeoShapeExtract"));
             nlohmann::json j;
-            //j["controllers"] = {"3D"};
             j["function"] = "geometry";
             j["args"] = {nlohmann::json::parse(jsonGeo.Data())};
                
-            printf("Sending geo json \n");
+            //printf("Sending geo json %s\n", j.dump().c_str());
             fWindow->Send(j.dump(), connid);
          }
          if (1) {
-            // top event
-            eventList = new REX::TEveElementList("Event");
             
-            nlohmann::json jArr;
-            jArr["arr"] = { };
-            jArr["guid"] = "77";
-            jArr["_typename"] = "unknown";
-            jArr["fName"] = "EventHolder";
-
-
-            // points
-            //
-            auto ps1 = getPointSet(200, 100, 3);
-            ps1->SetElementName("PSTest_1");
-            eventList->AddElement(ps1); // ?
-            nlohmann::json se1 = streamTEveElement(ps1, 0); //getGUID());
-            jArr["arr"].push_back(se1);
-
-            auto ps2 = getPointSet(10, 200, 4);
-            eventList->AddElement(ps2); // ?
-            ps2->SetElementName("PSTest_2");
-            nlohmann::json se2 = streamTEveElement(ps2, 1); //getGUID());
-            jArr["arr"].push_back(se2);
-
-            // tracks
-            //
-            auto prop = new REX::TEveTrackPropagator();
-            prop->SetMagFieldObj(new REX::TEveMagFieldDuo(350, -3.5, 2.0));
-            prop->SetMaxR(1000);
-            prop->SetMaxZ(1000);
-            
-            if (1) {
-               TParticle* p = new TParticle();p->SetPdgCode(11);
-               p->SetProductionVertex(0.068, 0.2401, -0.07629, 1);
-               p->SetMomentum(4.82895, 2.35083, -0.611757, 1);
-               auto track = new REX::TEveTrack(p, 1, prop);
-               track->MakeTrack();
-               eventList->AddElement(track);
-
-               track->SetElementName("TestTrack_1");
-               nlohmann::json tr1 = streamTEveElement(track, 2); //getGUID());
-               jArr["arr"].push_back(tr1);
-               }
-            if (1) {
-               TParticle* p = new TParticle(); p->SetPdgCode(11);
-               p->SetProductionVertex(0.068, 0.2401, -0.07629, 1);
-               p->SetMomentum(-0.82895, 0.83, -1.1757, 1);
-               auto track = new REX::TEveTrack(p, 1, prop);
-               track->MakeTrack();
-               eventList->AddElement(track);
-               track->SetMainColor(kBlue);
-               track->SetElementName("TestTrack_2");
-               nlohmann::json tr2 = streamTEveElement(track, 3); //getGUID());
-               jArr["arr"].push_back(tr2);
-            }
-         
-
-            // send event with action instructions
-            //
-             nlohmann::json j;
-            j["function"] = "event";
-            j["args"] = { jArr } ;
-            fWindow->Send(j.dump(), connid);
-            
+            REX::TEveElement* eventList = eveMng->GetEventScene();
+            nlohmann::json jTop;
+            jTop["function"] = "event";            
+            jTop["arr"] = nlohmann::json::array();
+            streamEveElement(eventList, jTop);
+            fWindow->Send(jTop.dump(), connid);
          }
          return;
       }
@@ -221,7 +143,7 @@ public:
    }
    
    void changeNumPoints(int id, int numPnts)
-   {
+   {/*
       REX::TEveElementList::List_i it = eventList->BeginChildren();
  
       if (id >=  eventList->NumChildren()) {
@@ -246,6 +168,7 @@ public:
       {
          fWindow->Send(j.dump(), i->m_id);
       }
+    */
    }
    
    void makeWebWindow(const std::string &where = "", bool printSShFw = false)
@@ -291,14 +214,77 @@ public:
 
 };
 
+REX::TEvePointSet* getPointSet(int npoints = 2, float s=2, int color=4)
+{
+   TRandom r(0);
+   REX::TEvePointSet* ps = new REX::TEvePointSet("fu");
+   for (Int_t i=0; i<npoints; ++i)
+   {
+      ps->SetNextPoint(r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s));
+   }
+
+   ps->SetMarkerColor(color);
+   ps->SetMarkerSize(r.Uniform(1, 2));
+   ps->SetMarkerStyle(4);
+
+   return ps;
+}
+
+void makeTestScene()
+{
+   // geo
+   //
+   TFile* geom =  TFile::Open("http://amraktad.web.cern.ch/amraktad/root/fake7geo.root", "CACHEREAD");                           
+   if (!geom)
+      return;
+   REX::TEveGeoShapeExtract* gse = (REX::TEveGeoShapeExtract*) geom->Get("Extract");
+   geo = gse;
+   // points
+   //
+   REX::TEveElement* event = eveMng->GetEventScene();
+   auto ps1 = getPointSet(20, 100, 3);
+   event->AddElement(ps1);
+
+
+   
+   auto ps2 = getPointSet(10, 200, 4);
+   event->AddElement(ps2);
+
+   // tracks
+   //
+   auto prop = new REX::TEveTrackPropagator();
+   prop->SetMagFieldObj(new REX::TEveMagFieldDuo(350, -3.5, 2.0));
+   prop->SetMaxR(1000);
+   prop->SetMaxZ(1000);
+   {
+      TParticle* p = new TParticle();p->SetPdgCode(11);
+      p->SetProductionVertex(0.068, 0.2401, -0.07629, 1);
+      p->SetMomentum(4.82895, 2.35083, -0.611757, 1);
+      auto track = new REX::TEveTrack(p, 1, prop);
+      track->MakeTrack();
+      track->SetElementName("TestTrack_1");
+      event->AddElement(track);
+   }
+   {
+      TParticle* p = new TParticle(); p->SetPdgCode(11);
+      p->SetProductionVertex(0.068, 0.2401, -0.07629, 1);
+      p->SetMomentum(-0.82895, 0.83, -1.1757, 1);
+      auto track = new REX::TEveTrack(p, 1, prop);
+      track->MakeTrack();
+      event->AddElement(track);
+      track->SetMainColor(kBlue);
+      track->SetElementName("TestTrack_2");
+   }
+}
+
 
 WHandler* handler = nullptr;
 
 void splitContainer(bool printSShFw = false)
 {
    gSystem->Load("libROOTEve");
-   REX::TEveManager::Create();
-   
+   eveMng = REX::TEveManager::Create();
+   makeTestScene();
    handler = new WHandler();
    handler->makeWebWindow("", printSShFw);
 }

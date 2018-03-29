@@ -21,7 +21,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                         cont[resp.function](resp.args[0]);
                     }
                     else if (resp.function === "event") {
-                        this._event = resp.args[0];
+                        console.log("EVE ", resp);
+                        this._event = resp["arr"][0];
                         this.event();
                     }
                     else if (resp.function === "replaceElement") {
@@ -38,7 +39,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                       //  this._event = lst;
                         {
                         var ele =  this.getView().byId("3D");
-                        console.log("ele 3D", ele);
+                        console.log("ele 3D >>>> ", ele);
                         if (!ele) return;
                         var cont = ele.getController();
                             cont["event"]( this._event);
