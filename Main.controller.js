@@ -22,7 +22,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                     }
                     else if (resp.function === "event") {
                         console.log("EVE ", resp);
-                        this._event = resp["arr"][0];
+                        this._event = resp.args[0];
                         this.event();
                     }
                     else if (resp.function === "replaceElement") {
