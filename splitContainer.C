@@ -98,12 +98,12 @@ public:
             fWindow->Send(j.dump(), connid);
          }
          if (1) {
-            
-            REX::TEveElement* eventList = eveMng->GetEventScene();
             nlohmann::json jTop;
-            jTop["function"] = "event";            
-            jTop["arr"] = nlohmann::json::array();
-            streamEveElement(eventList, jTop);
+            jTop["function"] = "event";
+            nlohmann::json eventScene;
+            eventScene["arr"] = nlohmann::json::array();
+            streamEveElement(eveMng->GetEventScene(), eventScene);
+            jTop["args"] = eventScene["arr"];
             fWindow->Send(jTop.dump(), connid);
          }
          return;
