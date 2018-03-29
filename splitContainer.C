@@ -244,11 +244,11 @@ void makeTestScene()
    //
    REX::TEveElement* event = eveMng->GetEventScene();
    auto ps1 = getPointSet(20, 100, 3);
+   ps1->SetElementName("Points_1");
    event->AddElement(ps1);
-
-
    
    auto ps2 = getPointSet(10, 200, 4);
+   ps2->SetElementName("Points_2");
    event->AddElement(ps2);
 
    // tracks
