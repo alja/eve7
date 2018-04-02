@@ -41,7 +41,7 @@
 namespace REX = ROOT::Experimental;
 
 // globals
-REX::TEveGeoShapeExtract* geo = 0;
+REX::TEveGeoShapeExtract* topGeo = 0;
 REX::TEveManager* eveMng = 0;
 
 struct Conn {
@@ -98,12 +98,12 @@ public:
          
 
          if (1) {
-            TString jsonGeo = TBufferJSON::ConvertToJSON(geo, gROOT->GetClass("ROOT::Experimental::TEveGeoShapeExtract"));
+            TString jsonGeo = TBufferJSON::ConvertToJSON(topGeo, gROOT->GetClass("ROOT::Experimental::TEveGeoShapeExtract"));
             nlohmann::json j;
             j["function"] = "geometry";
             j["args"] = {nlohmann::json::parse(jsonGeo.Data())};
                
-            //printf("Sending geo json %s\n", j.dump().c_str());
+            printf("Sending geo json %s\n", j.dump().c_str());
             fWindow->Send(j.dump(), connid);
          }
          if (1) {
@@ -231,15 +231,41 @@ REX::TEvePointSet* getPointSet(int npoints = 2, float s=2, int color=4)
    return ps;
 }
 
+REX::TEveGeoShapeExtract* getShapeExtract(REX::TEveGeoShape* gs)
+{
+      auto ese = new REX::TEveGeoShapeExtract();
+      ese->SetName(gs->GetElementName());
+      ese->SetShape(gs->GetShape());
+      TColor* c = gROOT->GetColor(gs->GetMainColor());
+      float rgba [4] = {c->GetRed(), c->GetGreen(), c->GetBlue(), 1 - float(gs->GetMainTransparency())/100};
+      ese->SetRGBA(rgba);
+      return ese;
+}
+
+
 void makeTestScene()
 {
    // geo
    //
-   TFile* geom =  TFile::Open("http://amraktad.web.cern.ch/amraktad/root/fake7geo.root", "CACHEREAD");                           
-   if (!geom)
-      return;
-   REX::TEveGeoShapeExtract* gse = (REX::TEveGeoShapeExtract*) geom->Get("Extract");
-   geo = gse;
+   
+   topGeo = new REX::TEveGeoShapeExtract("testGeometry3D");
+   
+   const Double_t kR_min = 240;
+   const Double_t kR_max = 250;
+   const Double_t kZ_d   = 300;
+
+   auto b1 = new REX::TEveGeoShape("Barell 1");
+   b1->SetShape(new TGeoTube(kR_min, kR_max, kZ_d));
+   b1->SetMainColor(kCyan);
+   b1->SetMainTransparency(80);
+   topGeo->AddElement(getShapeExtract(b1));
+
+   auto b2 = new REX::TEveGeoShape("Barell 2");
+   b2->SetShape(new TGeoTube(2*kR_min, 2*kR_max, 2*kZ_d));
+   b2->SetMainColor(kPink-3);
+   b2->SetMainTransparency(80);
+   topGeo->AddElement(getShapeExtract(b2));
+
    // points
    //
    REX::TEveElement* event = eveMng->GetEventScene();
@@ -251,6 +277,7 @@ void makeTestScene()
    ps2->SetElementName("Points_2");
    event->AddElement(ps2);
 
+   
    // tracks
    //
    auto prop = new REX::TEveTrackPropagator();
