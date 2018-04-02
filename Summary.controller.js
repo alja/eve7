@@ -71,6 +71,9 @@ sap.ui.define([
     	    console.log("deep val ", deep_value(this._event, path));
             this.editorElement = deep_value(this._event, path);
 
+            var oProductDetailPanel = this.byId("productDetailsPanel");
+            oProductDetailPanel.setHeaderText(this.editorElement._typename);
+
             var eventPath = oEvent.getParameter("listItem").getBindingContext("myModelName").getPath();
           //  eventPath="/arr/1";
 	    var oProductDetailPanel = this.byId("productDetailsPanel");
