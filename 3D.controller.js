@@ -45,7 +45,7 @@ sap.ui.define([
                 this.geo_painter.clearExtras(); // remove old three.js container with tracks and hits
                 //  this.geo_painter.drawExtras(lst);
                 for (var n=0; n< lst.arr.length; ++n) {
-                    this.geo_painter.drawHit(lst.arr[n], lst.arr[n].fName);
+                    this.geo_painter.drawExtras(lst.arr[n], lst.arr[n].fName);
                 }
                 console.log(lst);
                 // console.log("PAINTER ", this.geo_painter);
