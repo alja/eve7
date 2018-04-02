@@ -48,7 +48,7 @@ sap.ui.define([
                     this.geo_painter.drawHit(lst.arr[n], lst.arr[n].fName);
                 }
                 console.log(lst);
-                console.log("PAINTER ", this.geo_painter);
+                // console.log("PAINTER ", this.geo_painter);
                 return true;
             }
         },
