@@ -34,7 +34,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                         var idx= obj.idx;
                      //   console.log("DEBUG .... got a reference to OLD  ", obj.parent, "  p.idx ", idx);
                         obj.parent[idx] = resp.element;
-                      //  console.log("DEBUG .... new event ", this._event);
+                        console.log("DEBUG .... new event ", this._event);
                         
                         this.event();
                     }

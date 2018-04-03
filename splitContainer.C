@@ -57,6 +57,8 @@ struct Conn {
       TString flatJS = TBufferJSON::ConvertToJSON(el, el->IsA());  
       nlohmann::json cj =  nlohmann::json::parse(flatJS.Data());
       cj["guid"] = el->GetElementId();
+      cj["fRnrSelf"] = el->GetRnrSelf();
+      cj["fRnrChildren"] = el->GetRnrChildren();
       jsonParent["element"] = cj; 
    }
 
@@ -79,6 +81,8 @@ public:
       TString flatJS = TBufferJSON::ConvertToJSON(el, el->IsA());  
       nlohmann::json cj =  nlohmann::json::parse(flatJS.Data());
       cj["guid"] = el->GetElementId();
+      cj["fRnrSelf"] = el->GetRnrSelf();
+      cj["fRnrChildren"] = el->GetRnrChildren();
       jsonParent["arr"].push_back(cj);
       
       cj["arr"] =  nlohmann::json::array();
@@ -151,6 +155,19 @@ public:
 
    }
    
+   void changeRnrSelf(int id, bool rnr)
+   {
+      auto el =  eveMng->FindElementById(id);
+      el->SetRnrSelf(rnr);
+      
+      nlohmann::json j;
+      j["function"] = "replaceElement";
+      streamSingleEveElement(el, j);
+      for (auto i = m_connList.begin(); i != m_connList.end(); ++i)
+      {
+         fWindow->Send(j.dump(), i->m_id);
+      }
+   }
    void changeNumPoints(int id, int numPnts)
    {
 

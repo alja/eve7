@@ -15,9 +15,13 @@
   <Panel id="productDetailsPanel" headerText="EveElement Editor" class="sapUiResponsiveMargin" >
 			<VBox>
 
-      <Input description="Name" value="{event>fName}" change="printEvent" enabled="false" />
-      <Input description="Number Of points" value="{event>fN}" change="printEvent"/>
+<Label text="{event>fName}"   />
 
+      <l:HorizontalLayout class="sapUIContentPadding">
+      <CheckBox id="RnrSelf" text="RnrSelf" selected="{path:'event>fRnrSelf', type:'sap.ui.model.type.Boolean' }" select="changeRnrSelf"  enabled="true"/>
+      <CheckBox id="RnrChld" text="RnrChildren" selected="{path:'event>fRnrChildren', type:'sap.ui.model.type.Boolean' }" select="changeRnrChld" enabled="false"/>
+
+      </l:HorizontalLayout>
     </VBox>
   </Panel>
 

@@ -72,7 +72,9 @@ sap.ui.define([
             this.editorElement = deep_value(this._event, path);
 
             var oProductDetailPanel = this.byId("productDetailsPanel");
-            oProductDetailPanel.setHeaderText(this.editorElement._typename);
+           // var title =   this.editorElement.fName + " (" + this.editorElement._typename + " )" ;
+            var title =  this.editorElement._typename ;
+            oProductDetailPanel.setHeaderText(title);
 
             var eventPath = oEvent.getParameter("listItem").getBindingContext("myModelName").getPath();
           //  eventPath="/arr/1";
@@ -99,6 +101,17 @@ sap.ui.define([
            // alert("You have change : "+ path + " = " + object + " element " + JSON.stringify(this.editorElement));
 
             this.changeNumPoints();
+        },
+	changeRnrSelf: function(event)
+        {
+            console.log("change Rnr ", event.getParameters());
+            
+            var myJSON = "changeRnrSelf(" +  this.editorElement.guid + ", "  + event.getParameters().selected +  ")";
+            sap.ui.getCore().byId("TopEveId").getController().getHandle().Send(myJSON); 
+        },
+	changeRnrChld: function(event)
+        {
+            console.log("change Rnr ", event, " source ", event.getSource());
         }
     });
 

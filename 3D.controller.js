@@ -46,8 +46,12 @@ sap.ui.define([
             else {
                 this.geo_painter.clearExtras(); // remove old three.js container with tracks and hits
                 //  this.geo_painter.drawExtras(lst);
+                    var ex = this.geo_painter.getExtrasContainer();
                 for (var n=0; n< lst.arr.length; ++n) {
                     this.geo_painter.drawExtras(lst.arr[n], lst.arr[n].fName);
+                    // AMT .. this is problematic
+                    ex.children[n].visible =  lst.arr[n].fRnrSelf;
+
                 }
                 console.log(lst);
                 // console.log("PAINTER ", this.geo_painter);
