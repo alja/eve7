@@ -13,6 +13,8 @@ sap.ui.define([
         onInit : function() {
             console.log("onInit  id = ", this.getView().getId());
 	    ResizeHandler.register(this.getView(), this.onResize.bind(this));
+            DOCUMENT_READY = true;
+            sap.ui.getCore().byId("TopEveId").getController().processWaitingMsg();
         },
 
         // function called from GuiPanelController

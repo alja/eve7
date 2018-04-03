@@ -32,12 +32,19 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                         var obj = this.findElementWithId(resp.element.guid, this._event.arr);
                         // obj =  resp.element;
                         var idx= obj.idx;
-                        console.log("DEBUG .... got a reference to OLD  ", obj.parent, "  p.idx ", idx);
+                     //   console.log("DEBUG .... got a reference to OLD  ", obj.parent, "  p.idx ", idx);
                         obj.parent[idx] = resp.element;
                       //  console.log("DEBUG .... new event ", this._event);
                         
                         this.event();
                     }
+                },
+                processWaitingMsg: function() {
+                    for ( var i = 0; i < msgToWait.length; ++i ) {
+                        this.OnWebsocketMsg(handleToWait, msgToWait[i]);
+                    }
+                    handleToWait = 0;
+                    msgToWait = [];
                 },
                 event: function() {
                       //  this._event = lst;
