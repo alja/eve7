@@ -37,14 +37,22 @@ sap.ui.define([
 
 
 
-            var gedModel = { "widgetlist" : []};
+
+	    this.oModelGED = new JSONModel({ "widgetlist" : []});
+            sap.ui.getCore().setModel(this.oModelGED, "ged");
+            
 	    this.oGuiClassDef ={
 	            "ROOT::Experimental::TEvePointSet" : [
 		        {
 			    name : "N points",
 			    srv : "SetMarkerSize",
 			    member : "fMarkerSize",
-                            type   : sap.ui.model.type.Integer
+                            _type   : sap.ui.model.type.Integer
+			},{
+			    name : "N points_test",
+			    srv : "SetMarkerSize",
+			    member : "fMarkerSize",
+                            _type   : sap.ui.model.type.Integer
 			}
 	            ],
 	            "ROOT::Experimental::TEveTrack" : [
@@ -102,13 +110,13 @@ sap.ui.define([
                 console.log("filling add ", labeledInput);
                 arr.push(labeledInput);
             }
-            // .getModel("ged").setData(modelData);
 
-            var oDataGED = { "widgetlist" : arr };
-	    this.oModelGED = new JSONModel(oDataGED);
-            sap.ui.getCore().setModel(this.oModelGED, "ged");
+            this.maxLabelLength = 0;
             
-          //  this.getView().setModel({"widgetlist":arr}, "ged")
+          for (var i = 0; i < cgd.length; ++i) {
+              if (this.maxLabelLength < cgd[i].name.length) this.maxLabelLength = cgd[i].name.length;
+          }
+            this.getView().getModel("ged").setData({"widgetlist":arr});
         },
         onItemPressed: function(oEvent)
         {
@@ -137,52 +145,46 @@ sap.ui.define([
           gedFrame.bindAggregation("content", "ged>/widgetlist"  , this.gedFactory );
             
         },
-        gedFactory:function(sId, oContex)
+        gedFactory:function(sId, oContext)
         {
-	    return new sap.m.Input(sId, {
-		    value: {
-			path: "ged>value",
-		    }
-		});
+            console.log("factory ", oContext.oModel.oData[oContext.getPath()]);
+            console.log("factory id ",sId);
+            var base = "/widgetlist/";
+            var path = oContext.getPath();
+            var idx = path.substring(base.length);
+            var customData =  oContext.oModel.oData["widgetlist"][idx].data;
+            var controller =  sap.ui.getCore().byId("TopEveId--Summary").getController();
 
-            
-	    /*
-	    var cv = oContext.getProperty("value");
-
-	    switch(typeof value) {
-	    case "string":
-		return new sap.m.Text(sId, {
-		    text: {
-			path: "ged>value",
-		    }
-		});
-		
-	    case "number":
-		return new sap.m.Input(sId, {
+	    var widget = new sap.m.Input(sId, {
 		    value: {
-			path: "ged>value",
-		    }
-		});
-		
-	    case "boolean":
-		return new sap.m.CheckBox(sId, {
-		    selected: {
 			path: "ged>value"
-		    }
-		});
-            }*/
-            /*
-            var label = new sap.m.Text(sId + "label", { text:{ path: "ged>name"}});
-            label.addStyleClass("sapUiTinyMargin");
-            label.setWidht("70px");
+		    },
+		    change: function(oEvent) {
+                       controller.onInputChange(oEvent);
+                    }
+	    });
+            widget.data("myData", customData);
+
+           var label = new sap.m.Text(sId + "label", { text:{ path: "ged>name"}});
+label.setWidth(controller.maxLabelLength+"ex");
             
+            label.addStyleClass("sapUiTinyMargin");
             var HL= new sap.ui.layout.HorizontalLayout({
                 content : [label, widget]
             });
 
             return HL;
-*/
         },
+	  onInputChange: function(event) {
+	      console.log("on change !!!!!!", event.getSource().data("myData"));
+	      console.log("parameter ", event.getParameter("value"));
+              //bindingContext = event.getSource().getBindingContext();
+	      
+	     // console.log("on change !!!!!! binding context ", event.getSource().getBindingContext());
+             // propertyPath = event.getSource().getBinding("value").getPath();
+
+	      //console.log("onInputChange y path ", propertyPath = event.getSource().getBinding("value") );
+    },
         changeNumPoints:function()
         {
             var myJSON = "changeNumPoints(" +  this.editorElement.guid + ", "  + this.editorElement.fN +  ")";

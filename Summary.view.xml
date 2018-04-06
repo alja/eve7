@@ -23,7 +23,7 @@
 
       </l:HorizontalLayout>
 
-	<l:VerticalLayout id="GED" width="100%"/>
+	<l:VerticalLayout id="GED"  />
 
     </VBox>
   </Panel>
