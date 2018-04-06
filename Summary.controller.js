@@ -44,23 +44,34 @@ sap.ui.define([
 	    this.oGuiClassDef ={
 	            "ROOT::Experimental::TEvePointSet" : [
 		        {
+			    name : "RnrSelf",
+			    srv : "SetRnrSelf",
+			    member : "fRnrSelf",
+                            _type   : "Bool"
+			},{
 			    name : "MarkerSize",
 			    srv : "SetMarkerSize",
 			    member : "fMarkerSize",
-                            _type   : sap.ui.model.type.Integer
+                            _type   : "Number"
 			},{
-			    name : "test",
+			    name : "MarkerX",
 			    srv : "SetMarkerSize",
 			    member : "fMarkerSize",
-                            _type   : sap.ui.model.type.Integer
+                            _type   : "Number"
 			}
 	            ],
 	            "ROOT::Experimental::TEveTrack" : [
 		        {
+			    name : "RnrSelf",
+			    srv : "SetRnrSelf",
+			    member : "fRnrSelf",
+                            _type   : "Bool"
+			},
+		        {
 			    name : "Line width",
 			    srv: "SetLineWidth",
         		    member : "fLineWidth",
-                            type   : sap.ui.model.type.Float
+                            _type   : "Number"
 		        }
 	            ]
 		};
@@ -127,8 +138,8 @@ sap.ui.define([
             this.editorElement = deep_value(this._event, path);
 
             var oProductDetailPanel = this.byId("productDetailsPanel");
-            // var title =   this.editorElement.fName + " (" + this.editorElement._typename + " )" ;
-            var title =  this.editorElement._typename ;
+            var title =   this.editorElement.fName + " (" + this.editorElement._typename + " )" ;
+            //var title =  this.editorElement._typename ;
             oProductDetailPanel.setHeaderText(title);
 
             var eventPath = oEvent.getParameter("listItem").getBindingContext("myModelName").getPath();
@@ -155,16 +166,32 @@ sap.ui.define([
             var customData =  oContext.oModel.oData["widgetlist"][idx].data;
             var controller =  sap.ui.getCore().byId("TopEveId--Summary").getController();
             var widget;
+            switch (customData._type) {
+                
+	    case "Number":
+	        var widget = new sap.m.Input(sId, {
+		    value: {
+		        path: "ged>value"
+		    },
+		    change: function(oEvent) {
+                        controller.onInputChange(oEvent);
+                    }
+	        });
+                widget.setType(sap.m.InputType.Number);
+                break;
+             
+	    case "Bool":
+		widget = new sap.m.CheckBox(sId, {
+		    selected: {
+			path: "ged>value",
+		    },
+		    select: function(event) {
+			console.log("fff checkbox", event.getSource().getBindingContext("ged").getPath());
+		    }
+		});
+                break;
 
-	    var widget = new sap.m.Input(sId, {
-		value: {
-		    path: "ged>value"
-		},
-		change: function(oEvent) {
-                    controller.onInputChange(oEvent);
-                }
-	    });
-            widget.setType(sap.m.InputType.Number);
+            }
             widget.data("myData", customData);
 
             var label = new sap.m.Text(sId + "label", { text:{ path: "ged>name"}});

@@ -15,13 +15,6 @@
   <Panel id="productDetailsPanel" headerText="EveElement Editor" class="sapUiResponsiveMargin" >
 			<VBox>
 
-<Label text="{event>fName}"   />
-
-      <l:HorizontalLayout class="sapUIContentPadding">
-      <CheckBox id="RnrSelf" text="RnrSelf" selected="{path:'event>fRnrSelf', type:'sap.ui.model.type.Boolean' }" select="changeRnrSelf"  enabled="true"/>
-      <CheckBox id="RnrChld" text="RnrChildren" selected="{path:'event>fRnrChildren', type:'sap.ui.model.type.Boolean' }" select="changeRnrChld" enabled="false"/>
-
-      </l:HorizontalLayout>
 
 	<l:VerticalLayout id="GED"  />
 
