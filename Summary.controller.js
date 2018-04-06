@@ -44,12 +44,12 @@ sap.ui.define([
 	    this.oGuiClassDef ={
 	            "ROOT::Experimental::TEvePointSet" : [
 		        {
-			    name : "N points",
+			    name : "MarkerSize",
 			    srv : "SetMarkerSize",
 			    member : "fMarkerSize",
                             _type   : sap.ui.model.type.Integer
 			},{
-			    name : "N points_test",
+			    name : "test",
 			    srv : "SetMarkerSize",
 			    member : "fMarkerSize",
                             _type   : sap.ui.model.type.Integer
@@ -154,20 +154,21 @@ sap.ui.define([
             var idx = path.substring(base.length);
             var customData =  oContext.oModel.oData["widgetlist"][idx].data;
             var controller =  sap.ui.getCore().byId("TopEveId--Summary").getController();
+            var widget;
 
 	    var widget = new sap.m.Input(sId, {
-		    value: {
-			path: "ged>value"
-		    },
-		    change: function(oEvent) {
-                       controller.onInputChange(oEvent);
-                    }
+		value: {
+		    path: "ged>value"
+		},
+		change: function(oEvent) {
+                    controller.onInputChange(oEvent);
+                }
 	    });
+            widget.setType(sap.m.InputType.Number);
             widget.data("myData", customData);
 
-           var label = new sap.m.Text(sId + "label", { text:{ path: "ged>name"}});
-label.setWidth(controller.maxLabelLength+"ex");
-            
+            var label = new sap.m.Text(sId + "label", { text:{ path: "ged>name"}});
+            label.setWidth(controller.maxLabelLength+"ex");
             label.addStyleClass("sapUiTinyMargin");
             var HL= new sap.ui.layout.HorizontalLayout({
                 content : [label, widget]
