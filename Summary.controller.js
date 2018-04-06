@@ -36,34 +36,26 @@ sap.ui.define([
             this.model = oModel;
 
 
-            var gedModel = 
-		{
+
+            var gedModel = { "widgetlist" : []};
+	    this.oGuiClassDef ={
 	            "ROOT::Experimental::TEvePointSet" : [
 		        {
 			    name : "N points",
-			    function: "changeNpoints",
-			    value : 1
-			},
-		        {
-			    name : "Range",
-			    function: "changeRange",
-			    value : 1
+			    srv : "SetMarkerSize",
+			    member : "fMarkerSize",
+                            type   : sap.ui.model.type.Integer
 			}
 	            ],
 	            "ROOT::Experimental::TEveTrack" : [
 		        {
 			    name : "Line width",
-			    function: "change Line Width",
-        		    value : 1
-		        },
-		        {
-			    name : "Fit",
-			    function: "changeFit",
-			    value : true
-			}
+			    srv: "SetLineWidth",
+        		    member : "fLineWidth",
+                            type   : sap.ui.model.type.Float
+		        }
 	            ]
 		};
-	    sap.ui.getCore().setModel(this.oProductModel, "ged");
             
 	},
         event: function(lst) {
@@ -92,6 +84,32 @@ sap.ui.define([
 	    sap.ui.getCore().setModel(this.oProductModel, "event");
         },
         
+        makeDataForGED : function (element)
+        {
+            var arr = [];
+            var cgd = this.oGuiClassDef[element._typename];
+            console.log("filling ", cgd.length);
+                
+            for (var i=0; i< cgd.length; ++i) {
+                
+                var member =  cgd[i].member;
+                var v  = element[member];
+                var labeledInput = {
+                    "value" : v,
+                    "name"  : cgd[i].name,
+                    "data"  : cgd[i]
+                };
+                console.log("filling add ", labeledInput);
+                arr.push(labeledInput);
+            }
+            // .getModel("ged").setData(modelData);
+
+            var oDataGED = { "widgetlist" : arr };
+	    this.oModelGED = new JSONModel(oDataGED);
+            sap.ui.getCore().setModel(this.oModelGED, "ged");
+            
+          //  this.getView().setModel({"widgetlist":arr}, "ged")
+        },
         onItemPressed: function(oEvent)
         {
 	    //console.log("path", oEvent.getParameter("listItem").getBindingContext("myModelName").getPath());
@@ -110,45 +128,60 @@ sap.ui.define([
 	    var oProductDetailPanel = this.byId("productDetailsPanel");
             console.log("event path ", eventPath);
 	    oProductDetailPanel.bindElement({ path: eventPath, model: "event" });
+
+          var gedFrame =  this.getView().byId("GED");
+          gedFrame.unbindElement();
+          gedFrame.destroyContent();
+          this.makeDataForGED(this.editorElement);
+          console.log("going to bind >>> ", this.getView().getModel("ged"));
+          gedFrame.bindAggregation("content", "ged>/widgetlist"  , this.gedFactory );
+            
         },
-        setupGED:function()
+        gedFactory:function(sId, oContex)
         {
-            var gedView = this.getView().byId.GED();
-            gedView.destroyContent();
+	    return new sap.m.Input(sId, {
+		    value: {
+			path: "ged>value",
+		    }
+		});
+
             
-            var guiDef = this.guiModel[ this.editorElement._typename];
-            for (var i = 0; i < guiDef.length; ++i) {
-                widget = guiDef[1];
-	        switch(typeof this.editorElement._typename) {
-	        case "string":
-		    return new Text(sId, {
-		        text: {
-			    path: "revenue",
-			    type: new StringType()
-		        }
-		    });
-		    
-	        case "number":
-		    return new Input(sId, {
-		        value: {
-			    path: "revenue",
-			    type: new Float()
-		        },
-		        change: function(oEvent) { tc.onInputChange(oEvent);}
-		    });
-		    
-	        case "boolean":
-		    return new CheckBox(sId, {
-		        checked: {
-			    path: "revenue"
-		        },
-		        select: function(event) {
-			    console.log("fff checkbox", event.getSource().getBindingContext().getPath());
-		        }
-		    });
-	        }
-            }
+	    /*
+	    var cv = oContext.getProperty("value");
+
+	    switch(typeof value) {
+	    case "string":
+		return new sap.m.Text(sId, {
+		    text: {
+			path: "ged>value",
+		    }
+		});
+		
+	    case "number":
+		return new sap.m.Input(sId, {
+		    value: {
+			path: "ged>value",
+		    }
+		});
+		
+	    case "boolean":
+		return new sap.m.CheckBox(sId, {
+		    selected: {
+			path: "ged>value"
+		    }
+		});
+            }*/
+            /*
+            var label = new sap.m.Text(sId + "label", { text:{ path: "ged>name"}});
+            label.addStyleClass("sapUiTinyMargin");
+            label.setWidht("70px");
             
+            var HL= new sap.ui.layout.HorizontalLayout({
+                content : [label, widget]
+            });
+
+            return HL;
+*/
         },
         changeNumPoints:function()
         {
