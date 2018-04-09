@@ -54,7 +54,7 @@ sap.ui.define([
 			    member : "fMarkerSize",
                             _type   : "Number"
 			},{
-			    name : "MarkerX",
+			    name : "MarkerXY",
 			    srv : "SetMarkerSize",
 			    member : "fMarkerSize",
                             _type   : "Number"
@@ -173,8 +173,8 @@ sap.ui.define([
 		    value: {
 		        path: "ged>value"
 		    },
-		    change: function(oEvent) {
-                        controller.onInputChange(oEvent);
+		    change: function(event) {
+                        controller.sendMethodInvocationRequest(event.getParameter("value"), event);
                     }
 	        });
                 widget.setType(sap.m.InputType.Number);
@@ -186,7 +186,7 @@ sap.ui.define([
 			path: "ged>value",
 		    },
 		    select: function(event) {
-			console.log("fff checkbox", event.getSource().getBindingContext("ged").getPath());
+                        controller.sendMethodInvocationRequest(event.getSource().getSelected(), event);
 		    }
 		});
                 break;
@@ -203,16 +203,16 @@ sap.ui.define([
 
             return HL;
         },
-	  onInputChange: function(event) {
-	      console.log("on change !!!!!!", event.getSource().data("myData"));
-	      console.log("parameter ", event.getParameter("value"));
-              //bindingContext = event.getSource().getBindingContext();
-	      
-	     // console.log("on change !!!!!! binding context ", event.getSource().getBindingContext());
-             // propertyPath = event.getSource().getBinding("value").getPath();
+        sendMethodInvocationRequest: function(value, event) {
+	    console.log("on change !!!!!!", event.getSource().data("myData"));
+            var mir =  event.getSource().data("myData").srv + "( " + value + " )";
+            console.log("=====> ", mir);
+            var obj = {"mir" : mir, "guid" : this.editorElement.guid, "class" : this.editorElement._typename};
 
-	      //console.log("onInputChange y path ", propertyPath = event.getSource().getBinding("value") );
-    },
+            sap.ui.getCore().byId("TopEveId").getController().getHandle().Send(JSON.stringify(obj)); 
+            
+
+        },
         changeNumPoints:function()
         {
             var myJSON = "changeNumPoints(" +  this.editorElement.guid + ", "  + this.editorElement.fN +  ")";

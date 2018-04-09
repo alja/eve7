@@ -144,54 +144,29 @@ public:
          return;
       }
       else {
-
+         nlohmann::json cj =  nlohmann::json::parse(arg.c_str());
+         std::string mir =  cj["mir"];
+         std::string ctype =  cj["class"];
+         int id = cj["guid"];
+      
+         auto el =  eveMng->FindElementById(id);
          char cmd[128];
-         sprintf(cmd, "((WHandler*)%p)->%s;", this, arg.c_str());
-         printf("arg: %s\ncmd: %s\n", arg.c_str(), cmd);
+         sprintf(cmd, "((%s*)%p)->%s;", ctype.c_str(), el, mir.c_str());
+         // printf("cmd %s\n", cmd);
          gROOT->ProcessLine(cmd);
-         //gROOT->ProcessLine(arg.c_str());
-      }
-                     
-
-   }
-   
-   void changeRnrSelf(int id, bool rnr)
-   {
-      auto el =  eveMng->FindElementById(id);
-      el->SetRnrSelf(rnr);
       
-      nlohmann::json j;
-      j["function"] = "replaceElement";
-      streamSingleEveElement(el, j);
-      for (auto i = m_connList.begin(); i != m_connList.end(); ++i)
-      {
-         fWindow->Send(j.dump(), i->m_id);
-      }
-   }
-   void changeNumPoints(int id, int numPnts)
-   {
-
-      REX::TEvePointSet* ps = (REX::TEvePointSet*)(eveMng->FindElementById(id));
-      ps->Reset(numPnts, 0);
-      
-      TRandom r(0);
-      float s = r.Uniform(10, 200);
-      for (Int_t i=0; i<numPnts; ++i)
-      {
-         ps->SetNextPoint(r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s));
-      }
-      nlohmann::json j;
-      j["function"] = "replaceElement";
-      streamSingleEveElement(ps, j);
-      for (auto i = m_connList.begin(); i != m_connList.end(); ++i)
-      {
-         fWindow->Send(j.dump(), i->m_id);
+         nlohmann::json resp;
+         resp["function"] = "replaceElement";
+         streamSingleEveElement(el, resp);
+         for (auto i = m_connList.begin(); i != m_connList.end(); ++i)
+         {
+            fWindow->Send(resp.dump(), i->m_id);
+         }     
       }
    }
    
    void makeWebWindow(const std::string &where = "", bool printSShFw = false)
    {
-
       fWindow =  ROOT::Experimental::TWebWindowsManager::Instance()->CreateWindow(gROOT->IsBatch());
       // ?? AMT
       fWindow->GetServer()->AddLocation("/currentdir/", "/home/alja/future/splitContainer");
