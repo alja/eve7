@@ -51,6 +51,17 @@ struct Conn {
    Conn(unsigned int cId) : m_id(cId) {}
 };
 
+class RenderData {
+public:
+   RenderData(){}
+   RenderData(const char* f) {rnrFunction = f;}
+
+   void push(float x) {glVertexBuffer.push_back(x); }
+   
+   TString rnrFunction;
+   std::vector<float>  glVertexBuffer;
+   ClassDef(RenderData, 1);
+};
 
    void streamSingleEveElement(REX::TEveElement* el,nlohmann::json& jsonParent )
    {
@@ -94,6 +105,56 @@ public:
       }      
    }
 
+   void sendRenderData(REX::TEveElement* el)
+   {
+      printf("send renderdata  %s\n", el->GetElementName());
+      if (el->GetUserData()) {
+         void* ud = el->GetUserData();
+         //RenderData* r = dynamic_cast<RenderData*> (ud);
+         RenderData* r = ( RenderData*)(el->GetUserData());
+         if (!r) {
+            printf("ddddd no render data\n");
+         }
+         else
+         {
+            printf("redner data  %s\n",  el->GetElementName());
+            printf("redner data fun %s \n",  r->rnrFunction.Data());
+
+         }
+
+         printf("starting to build content \n");
+         nlohmann::json header;
+         header["function"] = "addElementRenderData";
+         header["guid"] = el->GetElementId();
+         header["renderer"] = r->rnrFunction.Data();
+
+         std::string flatHead = header.dump();
+         int hs = int(flatHead.size());
+         int vs = int(r->glVertexBuffer.size());
+
+         // offset must be a factor of 4
+         float ff = (hs+1.0)/4.0;
+         
+         int headOff = ceil(ff)*4;
+         printf("ceil of %d to %d \n", hs+1, headOff);
+      
+         uint8_t arr[vs*sizeof(float)+headOff];
+         arr[0]=hs; // write precise size
+         memcpy(&arr[1], flatHead.c_str(), hs);
+         memcpy(&arr[headOff], &r->glVertexBuffer[0], vs*sizeof(float));
+            
+         ROOT::Experimental::TWebWindow::RawBuffer* buff = new ROOT::Experimental::TWebWindow::RawBuffer(arr, sizeof(arr));
+         std::shared_ptr<ROOT::Experimental::TWebWindow::RawBuffer> mh(buff);
+         for (auto i = m_connList.begin(); i != m_connList.end(); ++i)
+         {
+            fWindow->SendBinary(mh, i->m_id);
+         }
+      }
+      for (auto it =  el->BeginChildren(); it != el->EndChildren(); ++it)
+         sendRenderData(*it);
+   }
+
+   
    void ProcessData(unsigned connid, const std::string &arg)
    {
       if (arg == "CONN_READY") {
@@ -118,6 +179,7 @@ public:
             streamEveElement(eveMng->GetEventScene(), eventScene);
             jTop["args"] = eventScene["arr"];
             fWindow->Send(jTop.dump(), connid);
+            sendRenderData(eveMng->GetEventScene());
          }
          return;
       }
@@ -211,16 +273,33 @@ REX::TEvePointSet* getPointSet(int npoints = 2, float s=2, int color=4)
 {
    TRandom r(0);
    REX::TEvePointSet* ps = new REX::TEvePointSet("fu");
+   RenderData* rnrData = new RenderData("drawHits");
    for (Int_t i=0; i<npoints; ++i)
    {
-      ps->SetNextPoint(r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s));
+      for (int k = 0; k<3; ++k)
+         rnrData->push(r.Uniform(-s,s));
    }
-
+   ps->SetUserData(rnrData);
+   
    ps->SetMarkerColor(color);
    ps->SetMarkerSize(r.Uniform(1, 2));
    ps->SetMarkerStyle(4);
 
    return ps;
+}
+
+void makeTrack(REX::TEveTrack* track)
+{
+   track->MakeTrack();
+   float* arr = track->GetP();
+   RenderData* rnrData = new RenderData("drawTrack");
+   for (Int_t i=0; i<track->GetN(); ++i) {
+      rnrData->push(arr[3*i]);
+      rnrData->push(arr[3*i]+1);
+      rnrData->push(arr[3*i]+2);
+   }
+   track->Reset();
+   track->SetUserData(rnrData);
 }
 
 REX::TEveGeoShapeExtract* getShapeExtract(REX::TEveGeoShape* gs)
@@ -281,7 +360,7 @@ void makeTestScene()
       p->SetProductionVertex(0.068, 0.2401, -0.07629, 1);
       p->SetMomentum(4.82895, 2.35083, -0.611757, 1);
       auto track = new REX::TEveTrack(p, 1, prop);
-      track->MakeTrack();
+      makeTrack(track);
       track->SetElementName("TestTrack_1");
       event->AddElement(track);
    }
@@ -290,7 +369,7 @@ void makeTestScene()
       p->SetProductionVertex(0.068, 0.2401, -0.07629, 1);
       p->SetMomentum(-0.82895, 0.83, -1.1757, 1);
       auto track = new REX::TEveTrack(p, 1, prop);
-      track->MakeTrack();
+      makeTrack(track);
       event->AddElement(track);
       track->SetMainColor(kBlue);
       track->SetElementName("TestTrack_2");
