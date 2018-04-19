@@ -17,30 +17,32 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                     if (typeof msg != "string") {
                         
                         
-                    console.log('TestPanel ArrayBuffer size ' +  msg.byteLength + ' offset ' + offset);
-                    var sizeArr = new Int8Array(msg, offset, offset+1);
-                    var textSize = sizeArr[0];
-                    console.log("textsize ",textSize );
-                    var arr = new Int8Array(msg, offset+1, textSize);
-                    for (var i =0; i < textSize; ++i) {
-                       // console.log(i, ":", arr[i], "-->", String.fromCharCode(arr[i]));
-                    }
-                    var str = String.fromCharCode.apply(String, arr);
+                        console.log('TestPanel ArrayBuffer size ' +  msg.byteLength + ' offset ' + offset);
+                        var sizeArr = new Int8Array(msg, offset, offset+1);
+                        var textSize = sizeArr[0];
+                        console.log("textsize ",textSize );
+                        var arr = new Int8Array(msg, offset+1, textSize);
+                        for (var i =0; i < textSize; ++i) {
+                            // console.log(i, ":", arr[i], "-->", String.fromCharCode(arr[i]));
+                        }
+                        var str = String.fromCharCode.apply(String, arr);
                         console.log("str = ", str);
+                        var obj = JSON.parse(str);
 
-                    // TODO string to JSON !!!
+                        // TODO string to JSON !!!
                         var headerOff = 4*Math.ceil((offset+1+textSize)/4.0);  
 
-                    var fArr = new Float32Array(msg, headerOff);
-                    
-                    for (var i =0; i < fArr.length; ++i) {
-                        console.log( i, " : vertex arr ", fArr[i]);
-                    }
+                        var fArr = new Float32Array(msg, headerOff);
 
+                        var el = this.findElementWithId(obj.guid, this._event.arr);
+                        el.renderer = obj.renderer;
+                        el.geoBuff = fArr;
                         
-                    return;
-
-                }
+                        var v =  this.getView().byId("3D");
+                        var cont = v.getController();
+                        cont.drawExtra(el, fArr);                        
+                        return;
+                    }
 
 
                     

@@ -170,6 +170,7 @@ public:
                
             printf("Sending geo json %s\n", j.dump().c_str());
             fWindow->Send(j.dump(), connid);
+            //sleep(5);
          }
          if (1) {
             nlohmann::json jTop;
@@ -273,7 +274,7 @@ REX::TEvePointSet* getPointSet(int npoints = 2, float s=2, int color=4)
 {
    TRandom r(0);
    REX::TEvePointSet* ps = new REX::TEvePointSet("fu");
-   RenderData* rnrData = new RenderData("drawHits");
+   RenderData* rnrData = new RenderData("makeHit");
    for (Int_t i=0; i<npoints; ++i)
    {
       for (int k = 0; k<3; ++k)
@@ -292,7 +293,7 @@ void makeTrack(REX::TEveTrack* track)
 {
    track->MakeTrack();
    float* arr = track->GetP();
-   RenderData* rnrData = new RenderData("drawTrack");
+   RenderData* rnrData = new RenderData("makeTrack");
    for (Int_t i=0; i<track->GetN(); ++i) {
       rnrData->push(arr[3*i]);
       rnrData->push(arr[3*i]+1);
@@ -344,6 +345,7 @@ void makeTestScene()
    ps1->SetElementName("Points_1");
    event->AddElement(ps1);
    
+   return; // AMT !!!
    auto ps2 = getPointSet(10, 200, 4);
    ps2->SetElementName("Points_2");
    event->AddElement(ps2);
