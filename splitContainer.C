@@ -105,7 +105,7 @@ public:
       }      
    }
 
-   void sendRenderData(REX::TEveElement* el)
+   void sendRenderData(REX::TEveElement* el, unsigned connid)
    {
       printf("send renderdata  %s\n", el->GetElementName());
       if (el->GetUserData()) {
@@ -145,13 +145,12 @@ public:
             
          ROOT::Experimental::TWebWindow::RawBuffer* buff = new ROOT::Experimental::TWebWindow::RawBuffer(arr, sizeof(arr));
          std::shared_ptr<ROOT::Experimental::TWebWindow::RawBuffer> mh(buff);
-         for (auto i = m_connList.begin(); i != m_connList.end(); ++i)
-         {
-            fWindow->SendBinary(mh, i->m_id);
-         }
+
+         fWindow->SendBinary(mh, connid);
+
       }
       for (auto it =  el->BeginChildren(); it != el->EndChildren(); ++it)
-         sendRenderData(*it);
+         sendRenderData(*it, connid);
    }
 
    
@@ -173,6 +172,14 @@ public:
             //sleep(5);
          }
          if (1) {
+            
+            // beginChanges
+            nlohmann::json cj;
+            cj["function"] = "endChanges";
+            cj["val"] = 0;
+            fWindow->Send(cj.dump(), connid);
+            
+            // core structure
             nlohmann::json jTop;
             jTop["function"] = "event";
             nlohmann::json eventScene;
@@ -180,7 +187,11 @@ public:
             streamEveElement(eveMng->GetEventScene(), eventScene);
             jTop["args"] = eventScene["arr"];
             fWindow->Send(jTop.dump(), connid);
-            sendRenderData(eveMng->GetEventScene());
+            // render info
+            sendRenderData(eveMng->GetEventScene(), connid);
+            // endChanges
+            cj["val"] = 1;
+            fWindow->Send(cj.dump(), connid);
          }
          return;
       }
@@ -296,8 +307,8 @@ void makeTrack(REX::TEveTrack* track)
    RenderData* rnrData = new RenderData("makeTrack");
    for (Int_t i=0; i<track->GetN(); ++i) {
       rnrData->push(arr[3*i]);
-      rnrData->push(arr[3*i]+1);
-      rnrData->push(arr[3*i]+2);
+      rnrData->push(arr[3*i+1]);
+      rnrData->push(arr[3*i+2]);
    }
    track->Reset();
    track->SetUserData(rnrData);
@@ -345,7 +356,6 @@ void makeTestScene()
    ps1->SetElementName("Points_1");
    event->AddElement(ps1);
    
-   return; // AMT !!!
    auto ps2 = getPointSet(10, 200, 4);
    ps2->SetElementName("Points_2");
    event->AddElement(ps2);
@@ -357,7 +367,7 @@ void makeTestScene()
    prop->SetMagFieldObj(new REX::TEveMagFieldDuo(350, -3.5, 2.0));
    prop->SetMaxR(1000);
    prop->SetMaxZ(1000);
-   {
+   if (1)   {
       TParticle* p = new TParticle();p->SetPdgCode(11);
       p->SetProductionVertex(0.068, 0.2401, -0.07629, 1);
       p->SetMomentum(4.82895, 2.35083, -0.611757, 1);
@@ -366,10 +376,11 @@ void makeTestScene()
       track->SetElementName("TestTrack_1");
       event->AddElement(track);
    }
+
    {
       TParticle* p = new TParticle(); p->SetPdgCode(11);
       p->SetProductionVertex(0.068, 0.2401, -0.07629, 1);
-      p->SetMomentum(-0.82895, 0.83, -1.1757, 1);
+       p->SetMomentum(-0.82895, 0.83, -1.1757, 1);
       auto track = new REX::TEveTrack(p, 1, prop);
       makeTrack(track);
       event->AddElement(track);

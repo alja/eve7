@@ -15,6 +15,8 @@ sap.ui.define([
 	    ResizeHandler.register(this.getView(), this.onResize.bind(this));
             DOCUMENT_READY = true;
             sap.ui.getCore().byId("TopEveId").getController().processWaitingMsg();
+
+            this.fast_event = [];
         },
 
         // function called from GuiPanelController
@@ -38,71 +40,81 @@ sap.ui.define([
             }*/
 
         },
+        endChanges: function(val) {
+            /*
+            if (this.drawExtra(data)) {
+                this.geo_painter.Render3D();
+            }*/
+
+            this.needRedraw = true;
+        },
         drawExtra : function(el) {
             if (!this.geo_painter) {
                 // no painter - no draw of event
-                this.fast_event = el;
+                this.fast_event.push(el);
                 return false;
             }
             else {
+               // this.geo_painter.clearExtras(); // remove old three.js container with tracks and hits
+
+                var len = this.fast_event.length;
+                for(var i = 0; i < len;  i++){
+                    var  el = this.fast_event.pop();
+                    this[el.renderer](el);
+                    
+                }
+
                 
-                this.geo_painter.clearExtras(); // remove old three.js container with tracks and hits
-
-                var producer = this;
-                this[el.renderer](el);
-
-
-                this.geo_painter.Render3D();
+                if (this.needRedraw) {
+                    this.geo_painter.Render3D();
+                    this.needRedraw = false;
+                }
                 // console.log("PAINTER ", this.geo_painter);
 
                 return true;
             }
         },
         makeHit: function(hit) {
-            /*
-            el.fN = el.geoBuff.length;
-            el.fP =  el.geoBuff;
-            this.geo_painter.drawHit(el);
-*/
 
-      var hit_size = 8*hit.fMarkerSize,
-          size = hit.geoBuff.length,
-          pnts = new JSROOT.Painter.PointsCreator(size, true, hit_size);
+            var hit_size = 8*hit.fMarkerSize,
+                size = hit.geoBuff.length/3,
+                pnts = new JSROOT.Painter.PointsCreator(size, true, hit_size);
             
-for (var i=0;i<size;i++)
-         pnts.AddPoint(hit.geoBuff[i*3],hit.geoBuff[i*3+1],hit.geoBuff[i*3+2]);
-               var mesh = pnts.CreatePoints(JSROOT.Painter.root_colors[hit.fMarkerColor] || "rgb(0,0,255)");
+            for (var i=0;i<size;i++)
+                pnts.AddPoint(hit.geoBuff[i*3],hit.geoBuff[i*3+1],hit.geoBuff[i*3+2]);
+            var mesh = pnts.CreatePoints(JSROOT.Painter.root_colors[hit.fMarkerColor] || "rgb(0,0,255)");
 
-      mesh.highlightMarkerSize = hit_size*3;
-      mesh.normalMarkerSize = hit_size;
-
-      mesh.geo_name = hit.fName;
-      mesh.geo_object = hit;
-
-      this.geo_painter.getExtrasContainer().add(mesh);
-            /*
-            // crate three js object
-            var geom = new THREE.BufferGeometry();
-            geom.addAttribute( 'position', new THREE.BufferAttribute( arr, 3 ) );
-            el.fMarkerSize=3;
-            var hitColor = JSROOT.Painter.root_colors[el.fMarkerColor] || "rgb(0,0,255)";
-            var hit_size = 8*el.fMarkerSize;
-            var material = new THREE.PointsMaterial( {size: hit_size, color:hitColor} );
-            var mesh = new THREE.Points(this.geom, material);
-            mesh.nvertex = 1; // AMT ???
-
-            // AMT this is taken from TGeoPainter.prototype.drawHit
             mesh.highlightMarkerSize = hit_size*3;
             mesh.normalMarkerSize = hit_size;
 
-            mesh.geo_name = el.fName;
-            mesh.geo_object = el;
-            console.log("hiy mesh ", mesh);
-            this.geo_painter.getExtrasContainer().add(mesh);
-*/
+            mesh.geo_name = hit.fName;
+            mesh.geo_object = hit;
 
+            this.geo_painter.getExtrasContainer().add(mesh);
         },
-        makeTrack: function(el, arr) {
+        makeTrack: function(track) {
+            
+            var N = track.geoBuff.length/3;
+            var track_width = track.fLineWidth || 1,
+                track_color = JSROOT.Painter.root_colors[track.fLineColor] || "rgb(255,0,255)";
+
+            var buf = new Float32Array(N*3*2), pos = 0;
+            for (var k=0;k<(N-1);++k) {
+                buf[pos]   = track.geoBuff[k*3];
+                buf[pos+1] = track.geoBuff[k*3+1];
+                buf[pos+2] = track.geoBuff[k*3+2];
+                buf[pos+3] = track.geoBuff[k*3+3];
+                buf[pos+4] = track.geoBuff[k*3+4];
+                buf[pos+5] = track.geoBuff[k*3+5];
+                console.log(" vertex ", buf[pos],buf[pos+1], buf[pos+2],buf[pos+3], buf[pos+4],  buf[pos+5]);
+                pos+=6;
+            }
+            var lineMaterial = new THREE.LineBasicMaterial({ color: track_color, linewidth: track_width }),
+                line = JSROOT.Painter.createLineSegments(buf, lineMaterial);
+
+            line.geo_name = track.fName;
+            line.geo_object = track;
+            this.geo_painter.getExtrasContainer().add(line);
 
         },
 	onResize: function(event) {

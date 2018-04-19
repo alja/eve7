@@ -72,6 +72,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                         
                         this.event();
                     }
+                    else if (resp.function === "endChanges") {
+                        this.endChanges = resp.val;
+                        if (resp.val) {
+                        var ele =  this.getView().byId("3D");
+                            var cont = ele.getController();
+                            cont.endChanges(resp.val);
+                        }
+                    }
                 },
                 processWaitingMsg: function() {
                     for ( var i = 0; i < msgToWait.length; ++i ) {
