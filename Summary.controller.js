@@ -105,9 +105,9 @@ sap.ui.define([
         
         makeDataForGED : function (element)
         {
+            console.log("makeDataForGED ", element);
             var arr = [];
             var cgd = this.oGuiClassDef[element._typename];
-            console.log("filling ", cgd.length);
                 
             for (var i=0; i< cgd.length; ++i) {
                 
@@ -118,7 +118,7 @@ sap.ui.define([
                     "name"  : cgd[i].name,
                     "data"  : cgd[i]
                 };
-                console.log("filling add ", labeledInput);
+                console.log("filling add ", labeledInput, cgd[i]);
                 arr.push(labeledInput);
             }
 
@@ -136,7 +136,8 @@ sap.ui.define([
             path = path.substring(3);
     	    console.log("deep val ", deep_value(this._event, path));
             this.editorElement = deep_value(this._event, path);
-
+            console.log("SELCT ", this.editorElement);
+            
             var oProductDetailPanel = this.byId("productDetailsPanel");
             var title =   this.editorElement.fName + " (" + this.editorElement._typename + " )" ;
             //var title =  this.editorElement._typename ;

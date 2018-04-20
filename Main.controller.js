@@ -35,12 +35,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                         var fArr = new Float32Array(msg, headerOff);
 
                         var el = this.findElementWithId(obj.guid, this._event.arr);
+                        console.log("main extra ", el, this._event.arr);
                         el.renderer = obj.renderer;
                         el.geoBuff = fArr;
-                        
                         var v =  this.getView().byId("3D");
                         var cont = v.getController();
-                        cont.drawExtra(el, fArr);                        
+                        cont.drawExtra(el);                        
                         return;
                     }
 
@@ -64,13 +64,21 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                         // find the element with guid in the event ... currently one level
 
                         var obj = this.findElementWithId(resp.element.guid, this._event.arr);
-                        // obj =  resp.element;
-                        var idx= obj.idx;
-                     //   console.log("DEBUG .... got a reference to OLD  ", obj.parent, "  p.idx ", idx);
-                        obj.parent[idx] = resp.element;
+
+                        //   console.log("DEBUG .... got a reference to OLD  ", obj.parent, "  p.idx ", idx);
+                         resp.element.renderer = obj.renderer;
+                         resp.element.geoBuff = obj.geoBuff;
+                        
+
+                        // TO DO .... destruct original obj, copy binary render data
+
                         console.log("DEBUG .... new event ", this._event);
                         
+                        var ele =  this.getView().byId("3D");
+                        var cont = ele.getController();
+                        cont.replaceElement(resp.element);
                         this.event();
+
                     }
                     else if (resp.function === "endChanges") {
                         this.endChanges = resp.val;
@@ -137,11 +145,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                             var obj = findElementWithId(valueToSearch, theArray.arr[i], currentIndex + i + ',');
                             if (obj) return obj;
                         } else if (theArray[i]['guid'] == valueToSearch) {
+                            /*
                             var obj = {
                                 idx:i,
                                 parent : theArray
                             };
                             return obj;
+                            */
+                            return theArray[i];
                         }
                     }
                 }

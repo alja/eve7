@@ -28,7 +28,7 @@ sap.ui.define([
 	    JSROOT.draw(id, data, "", function(painter) {
                 console.log('3D painter initialized', painter);
                 pthis.geo_painter = painter;
-                if (pthis.fast_event) pthis.drawExtra(pthis.fast_event);
+                if (pthis.fast_event) pthis.drawExtra();
                 pthis.geo_painter.Render3D();
 
 	    });
@@ -38,17 +38,13 @@ sap.ui.define([
             if (this.drawExtra(data)) {
                 this.geo_painter.Render3D();
             }*/
-
         },
         endChanges: function(val) {
-            /*
-            if (this.drawExtra(data)) {
-                this.geo_painter.Render3D();
-            }*/
 
             this.needRedraw = true;
         },
         drawExtra : function(el) {
+           // console.log("drawExtra ");
             if (!this.geo_painter) {
                 // no painter - no draw of event
                 this.fast_event.push(el);
@@ -56,15 +52,12 @@ sap.ui.define([
             }
             else {
                // this.geo_painter.clearExtras(); // remove old three.js container with tracks and hits
-
                 var len = this.fast_event.length;
                 for(var i = 0; i < len;  i++){
-                    var  el = this.fast_event.pop();
-                    this[el.renderer](el);
-                    
+                    var  x = this.fast_event.pop();
+                    this[x.renderer](x);                    
                 }
-
-                
+                if (el) {this[x.renderer](x);}
                 if (this.needRedraw) {
                     this.geo_painter.Render3D();
                     this.needRedraw = false;
@@ -75,7 +68,7 @@ sap.ui.define([
             }
         },
         makeHit: function(hit) {
-
+           // console.log("drawHit ", hit);
             var hit_size = 8*hit.fMarkerSize,
                 size = hit.geoBuff.length/3,
                 pnts = new JSROOT.Painter.PointsCreator(size, true, hit_size);
@@ -91,9 +84,10 @@ sap.ui.define([
             mesh.geo_object = hit;
 
             this.geo_painter.getExtrasContainer().add(mesh);
+            mesh.visible = hit.fRnrSelf;
+            return mesh;
         },
-        makeTrack: function(track) {
-            
+        makeTrack: function(track) {            
             var N = track.geoBuff.length/3;
             var track_width = track.fLineWidth || 1,
                 track_color = JSROOT.Painter.root_colors[track.fLineColor] || "rgb(255,0,255)";
@@ -106,7 +100,7 @@ sap.ui.define([
                 buf[pos+3] = track.geoBuff[k*3+3];
                 buf[pos+4] = track.geoBuff[k*3+4];
                 buf[pos+5] = track.geoBuff[k*3+5];
-                console.log(" vertex ", buf[pos],buf[pos+1], buf[pos+2],buf[pos+3], buf[pos+4],  buf[pos+5]);
+                // console.log(" vertex ", buf[pos],buf[pos+1], buf[pos+2],buf[pos+3], buf[pos+4],  buf[pos+5]);
                 pos+=6;
             }
             var lineMaterial = new THREE.LineBasicMaterial({ color: track_color, linewidth: track_width }),
@@ -115,7 +109,21 @@ sap.ui.define([
             line.geo_name = track.fName;
             line.geo_object = track;
             this.geo_painter.getExtrasContainer().add(line);
-
+            line.visible = track.fRnrSelf;
+            return line;
+        },
+        replaceElement:function(el) {
+            var ec = this.geo_painter.getExtrasContainer();
+            var c = ec.children;
+            
+            for (var i = 0; i < c.length; ++i) {
+                if (c[i].geo_object.guid == el.guid) {
+                    console.log("replace 3D");
+                    ec.remove(c[i]);
+                }
+            }
+            this[el.renderer](el);             
+            this.geo_painter.Render3D();
         },
 	onResize: function(event) {
             // use timeout
