@@ -20,11 +20,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                         console.log('TestPanel ArrayBuffer size ' +  msg.byteLength + ' offset ' + offset);
                         var sizeArr = new Int8Array(msg, offset, offset+1);
                         var textSize = sizeArr[0];
-                        console.log("textsize ",textSize );
                         var arr = new Int8Array(msg, offset+1, textSize);
-                        for (var i =0; i < textSize; ++i) {
-                            // console.log(i, ":", arr[i], "-->", String.fromCharCode(arr[i]));
-                        }
                         var str = String.fromCharCode.apply(String, arr);
                         console.log("str = ", str);
                         var obj = JSON.parse(str);
