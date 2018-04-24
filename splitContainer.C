@@ -95,19 +95,21 @@ public:
       cj["fRnrSelf"] = el->GetRnrSelf();
       cj["fRnrChildren"] = el->GetRnrChildren();
       jsonParent["arr"].push_back(cj);
+
+      int loci = jsonParent["arr"].size() -1;
       
       cj["arr"] =  nlohmann::json::array();
       // printf(" stream >>>>>> %s %d parent = %s \n", el->GetElementName(),  el->NumChildren(), jsonParent.dump().c_str());
       for (auto it =  el->BeginChildren(); it != el->EndChildren(); ++it)
       {
          // printf(".... stream child %s of parent %s \n", (*it)->GetElementName(), el->GetElementName());
-         streamEveElement(*it,  jsonParent["arr"][0]);
+         streamEveElement(*it, jsonParent["arr"][loci] );
       }      
    }
 
    void sendRenderData(REX::TEveElement* el, unsigned connid)
    {
-      printf("send renderdata  %s\n", el->GetElementName());
+      // printf("send renderdata  %s\n", el->GetElementName());
       if (el->GetUserData()) {
          void* ud = el->GetUserData();
          //RenderData* r = dynamic_cast<RenderData*> (ud);
@@ -136,7 +138,7 @@ public:
          float ff = (hs+1.0)/4.0;
          
          int headOff = ceil(ff)*4;
-         printf("ceil of %d to %d \n", hs+1, headOff);
+         // printf("ceil of %d to %d \n", hs+1, headOff);
       
          uint8_t arr[vs*sizeof(float)+headOff];
          arr[0]=hs; // write precise size
@@ -160,14 +162,13 @@ public:
          m_connList.push_back(Conn(connid));
          printf("connection established %u\n", connid);
          
-
          if (1) {
             TString jsonGeo = TBufferJSON::ConvertToJSON(topGeo, gROOT->GetClass("ROOT::Experimental::TEveGeoShapeExtract"));
             nlohmann::json j;
             j["function"] = "geometry";
             j["args"] = {nlohmann::json::parse(jsonGeo.Data())};
                
-            printf("Sending geo json %s\n", j.dump().c_str());
+            //  printf("Sending geo json %s\n", j.dump().c_str());
             fWindow->Send(j.dump(), connid);
             //sleep(5);
          }
@@ -185,6 +186,8 @@ public:
             nlohmann::json eventScene;
             eventScene["arr"] = nlohmann::json::array();
             streamEveElement(eveMng->GetEventScene(), eventScene);
+            
+            printf("ffffffffffffffff %s \n", eventScene.dump().c_str());
             jTop["args"] = eventScene["arr"];
             fWindow->Send(jTop.dump(), connid);
             // render info
@@ -351,15 +354,18 @@ void makeTestScene()
 
    // points
    //
+   REX::TEveElement* pntHolder = new REX::TEveElementList("Hits");
+   
    REX::TEveElement* event = eveMng->GetEventScene();
    auto ps1 = getPointSet(20, 100, 3);
    ps1->SetElementName("Points_1");
-   event->AddElement(ps1);
+   pntHolder->AddElement(ps1);
    
    auto ps2 = getPointSet(10, 200, 4);
    ps2->SetElementName("Points_2");
-   event->AddElement(ps2);
+   pntHolder->AddElement(ps2);
 
+   event->AddElement(pntHolder);
    
    // tracks
    //
@@ -367,6 +373,7 @@ void makeTestScene()
    prop->SetMagFieldObj(new REX::TEveMagFieldDuo(350, -3.5, 2.0));
    prop->SetMaxR(1000);
    prop->SetMaxZ(1000);
+   REX::TEveElement* trackHolder = new REX::TEveElementList("Tracks");
    if (1)   {
       TParticle* p = new TParticle();p->SetPdgCode(11);
       p->SetProductionVertex(0.068, 0.2401, -0.07629, 1);
@@ -374,7 +381,7 @@ void makeTestScene()
       auto track = new REX::TEveTrack(p, 1, prop);
       makeTrack(track);
       track->SetElementName("TestTrack_1");
-      event->AddElement(track);
+      trackHolder->AddElement(track);
    }
 
    {
@@ -383,10 +390,11 @@ void makeTestScene()
        p->SetMomentum(-0.82895, 0.83, -1.1757, 1);
       auto track = new REX::TEveTrack(p, 1, prop);
       makeTrack(track);
-      event->AddElement(track);
       track->SetMainColor(kBlue);
       track->SetElementName("TestTrack_2");
+      trackHolder->AddElement(track);
    }
+   event->AddElement(trackHolder);
 }
 
 

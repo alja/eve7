@@ -24,14 +24,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                         var str = String.fromCharCode.apply(String, arr);
                         console.log("str = ", str);
                         var obj = JSON.parse(str);
-
+                        console.log("---------------------------- renderer comming ", obj);
                         // TODO string to JSON !!!
                         var headerOff = 4*Math.ceil((offset+1+textSize)/4.0);  
 
                         var fArr = new Float32Array(msg, headerOff);
 
-                        var el = this.findElementWithId(obj.guid, this._event.arr);
-                        console.log("main extra ", el, this._event.arr);
+                        var el = this.findElementWithId(obj.guid, this._event);
+
+                        console.log("find element ", el);
+                        
                         el.renderer = obj.renderer;
                         el.geoBuff = fArr;
                         var v =  this.getView().byId("3D");
@@ -59,9 +61,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                         console.log("replace element ", resp);
                         // find the element with guid in the event ... currently one level
 
-                        var obj = this.findElementWithId(resp.element.guid, this._event.arr);
+                        var obj = this.findElementWithId(resp.element.guid, this._event);
 
-                        //   console.log("DEBUG .... got a reference to OLD  ", obj.parent, "  p.idx ", idx);
+                         console.log("DEBUG .... got a reference to OLD  ", obj.parent);
                          resp.element.renderer = obj.renderer;
                          resp.element.geoBuff = obj.geoBuff;
                         
@@ -134,23 +136,22 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
 		    );
 		    
 		},
-                findElementWithId: function(valueToSearch, theArray, currentIndex) {
-                    
-                    for (var i = 0; i < theArray.length; i++) {
-                        if(theArray.arr) {
-                            var obj = findElementWithId(valueToSearch, theArray.arr[i], currentIndex + i + ',');
-                            if (obj) return obj;
-                        } else if (theArray[i]['guid'] == valueToSearch) {
-                            /*
-                            var obj = {
-                                idx:i,
-                                parent : theArray
-                            };
-                            return obj;
-                            */
-                            return theArray[i];
+                findElementWithId: function(valueToSearch, el) {
+                    if (!el) {
+                        el = this._event;
+                    }
+                    console.log("serach ",valueToSearch, "in", el )
+                    if (el.guid == valueToSearch) {
+                        console.log("found it findElementWithId ", el)
+                        return el;
+                    }
+                    if ( el.arr) {
+                        for (var i = 0; i < el.arr.length; i++) {
+                            var x = this.findElementWithId(valueToSearch, el.arr[i]);
+                            if (x) return x; 
                         }
                     }
+                    return 0;
                 }
 	    });
 

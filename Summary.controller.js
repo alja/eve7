@@ -4,12 +4,6 @@ sap.ui.define([
 ], function(Controller, JSONModel) {
     "use strict";
 
-    var deep_value = function(obj, path){
-        for (var i=0, path=path.split('/'), len=path.length; i<len; i++){
-            obj = obj[path[i]];
-        };
-        return obj;
-    };
     return Controller.extend("eve.Summary", {
 	onInit: function () {
             
@@ -27,16 +21,19 @@ sap.ui.define([
 	    
 	    oTree.setModel(oModel, "myModelName");
 
-	    var oStandardTreeItem = new  sap.m.StandardTreeItem({
+	    var oStandardTreeItemTemplate = new  sap.m.StandardTreeItem({
 	        title: "{myModelName>fName}",
                 type: sap.m.ListType.Detail
 	    });
-	    oTree.bindItems("myModelName>/", oStandardTreeItem);
+            /*
+            var oDataTemplate = new sap.ui.core.CustomData({
+                key:"eveElement"
+            });
+            oDataTemplate.bindProperty("value", "answer");
+            */
+	    oTree.bindItems("myModelName>/", oStandardTreeItemTemplate);
             this.tree = oTree;
             this.model = oModel;
-
-
-
 
 	    this.oModelGED = new JSONModel({ "widgetlist" : []});
             sap.ui.getCore().setModel(this.oModelGED, "ged");
@@ -77,22 +74,66 @@ sap.ui.define([
 		};
             
 	},
+        addNodesToTreeItemModel:function(el, model) {
+       //     console.log("FILL el ", el)
+            model.fName = el.fName;
+            model.guid = el.guid;
+             if (el.arr) {
+                model.arr = new Array(el.arr.length);
+                for (var n=0; n< el.arr.length; ++n) {
+                    
+                  //  console.log("child  ", el.arr[n]);
+                    model.arr[n]= {"fName" : "unset"};
+
+                    this.addNodesToTreeItemModel(el.arr[n], model.arr[n]); 
+                }
+                
+            }
+            
+            /*
+            for (var n=0; n< lst.arr.length; ++n)
+            {
+                var el = lst.arr[n];
+                var node = {
+                    "fName" : el.fName,
+                    "guid" : el.guid
+                };
+
+                model.arr.push(node);
+                if (el.arr) {
+                    node.arr = [];
+                    this.addNodesToTreeItemModel(el, node);
+                }
+                }
+*/
+            
+        },
+        addNodesToCustomModel:function(lst, model) {/*
+            for ((var n=0; n< lst.arr.length; ++n))
+            {
+                var el = lst.arr[n];
+                var node = {fName : el.fName , guid : el.guid};
+                model.push(node);
+                if (el.arr) {
+                    node.arr = [];
+                    addNodesToTreeItemModel(el, node);
+                }
+            }
+*/
+        },
         event: function(lst) {
             this._event = lst;
             console.log("summary event lst \n", lst);
             
-            var oTreeData = [];
-            
-            for (var n=0; n< lst.arr.length; ++n) {
-                var el = {fName : lst.arr[n].fName , guid : lst.arr[n].guid, _typename :  lst.arr[n]._typename};
-                oTreeData.push(el);
-            }
+            var oTreeData = {fName: "unset"}
 
-            var eventData = { "fName" : lst.fName, "guid" : lst.guid, "arr" : oTreeData, _typename: lst._typename};
-            console.log("event model ", eventData);
+            oTreeData.arr = [];
+           this.addNodesToTreeItemModel(lst, oTreeData);
+            console.log("event model ", { "top" : oTreeData});
 
-            this.model.setData([]);
-            this.model.setData([eventData]);
+            this.model.setData({ "fName" : "Top", "arr" : oTreeData }); // ??? is this necessary
+
+            console.log("tree ", this.tree.getItems());
             this.model.refresh(true);
             this.tree.expandToLevel(3);
 	    sap.ui.getCore().setModel(this.model, "myModelName");
@@ -131,20 +172,17 @@ sap.ui.define([
         },
         onItemPressed: function(oEvent)
         {
-	    //console.log("path", oEvent.getParameter("listItem").getBindingContext("myModelName").getPath());
 	    var path =  oEvent.getParameter("listItem").getBindingContext("myModelName").getPath();
-            path = path.substring(3);
-    	    console.log("deep val ", deep_value(this._event, path));
-            this.editorElement = deep_value(this._event, path);
-            console.log("SELCT ", this.editorElement);
-            
+            // console.log("path XXX ", oEvent.getParameter("listItem").getBindingContext("myModelName").getProperty(path) );
+            var ttt = oEvent.getParameter("listItem").getBindingContext("myModelName").getProperty(path);
+
+            this.editorElement =  sap.ui.getCore().byId("TopEveId").getController().findElementWithId(ttt.guid);
             var oProductDetailPanel = this.byId("productDetailsPanel");
             var title =   this.editorElement.fName + " (" + this.editorElement._typename + " )" ;
             //var title =  this.editorElement._typename ;
             oProductDetailPanel.setHeaderText(title);
 
             var eventPath = oEvent.getParameter("listItem").getBindingContext("myModelName").getPath();
-            //  eventPath="/arr/1";
 	    var oProductDetailPanel = this.byId("productDetailsPanel");
             console.log("event path ", eventPath);
 	    oProductDetailPanel.bindElement({ path: eventPath, model: "event" });
