@@ -139,16 +139,17 @@ public:
          
          int headOff = ceil(ff)*4;
          // printf("ceil of %d to %d \n", hs+1, headOff);
-      
-         uint8_t arr[vs*sizeof(float)+headOff];
+
+         uint totalSize = vs*sizeof(float)+headOff;
+         uint8_t arr[totalSize];
          arr[0]=hs; // write precise size
          memcpy(&arr[1], flatHead.c_str(), hs);
          memcpy(&arr[headOff], &r->glVertexBuffer[0], vs*sizeof(float));
             
-         ROOT::Experimental::TWebWindow::RawBuffer* buff = new ROOT::Experimental::TWebWindow::RawBuffer(arr, sizeof(arr));
-         std::shared_ptr<ROOT::Experimental::TWebWindow::RawBuffer> mh(buff);
+         //ROOT::Experimental::TWebWindow::RawBuffer* buff = new ROOT::Experimental::TWebWindow::RawBuffer(arr, sizeof(arr));
+         //std::shared_ptr<ROOT::Experimental::TWebWindow::RawBuffer> mh(buff);
 
-         fWindow->SendBinary(mh, connid);
+         fWindow->SendBinary(connid, &arr[0], totalSize);
 
       }
       for (auto it =  el->BeginChildren(); it != el->EndChildren(); ++it)
@@ -169,7 +170,7 @@ public:
             j["args"] = {nlohmann::json::parse(jsonGeo.Data())};
                
             //  printf("Sending geo json %s\n", j.dump().c_str());
-            fWindow->Send(j.dump(), connid);
+            fWindow->Send(connid, j.dump());
             //sleep(5);
          }
          if (1) {
@@ -178,7 +179,7 @@ public:
             nlohmann::json cj;
             cj["function"] = "endChanges";
             cj["val"] = 0;
-            fWindow->Send(cj.dump(), connid);
+            fWindow->Send(connid, cj.dump());
             
             // core structure
             nlohmann::json jTop;
@@ -189,12 +190,12 @@ public:
             
             printf("ffffffffffffffff %s \n", eventScene.dump().c_str());
             jTop["args"] = eventScene["arr"];
-            fWindow->Send(jTop.dump(), connid);
+            fWindow->Send(connid,jTop.dump());
             // render info
             sendRenderData(eveMng->GetEventScene(), connid);
             // endChanges
             cj["val"] = 1;
-            fWindow->Send(cj.dump(), connid);
+            fWindow->Send(connid, cj.dump());
          }
          return;
       }
@@ -237,7 +238,7 @@ public:
          streamSingleEveElement(el, resp);
          for (auto i = m_connList.begin(); i != m_connList.end(); ++i)
          {
-            fWindow->Send(resp.dump(), i->m_id);
+            fWindow->Send(i->m_id, resp.dump());
          }     
       }
    }
