@@ -10,23 +10,24 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                 getHandle: function () {
                     return this.handle;
                 },
-	        OnWebsocketMsg: function(handle, msg, offset) {
+	        OnWebsocketMsg: function(handle, msg) {
                     this.handle = handle;
-
                     
                     if (typeof msg != "string") {
                         
                         
-                        console.log('TestPanel ArrayBuffer size ' +  msg.byteLength + ' offset ' + offset);
-                        var sizeArr = new Int8Array(msg, offset, offset+1);
+                        console.log('TestPanel ArrayBuffer size ' +  msg.byteLength);
+                        var sizeArr = new Int8Array(msg, 0, 1);
                         var textSize = sizeArr[0];
-                        var arr = new Int8Array(msg, offset+1, textSize);
+                        console.log("textsize ", textSize);
+                        var arr = new Int8Array(msg, 1, textSize);
                         var str = String.fromCharCode.apply(String, arr);
                         console.log("str = ", str);
+                        
                         var obj = JSON.parse(str);
                         console.log("---------------------------- renderer comming ", obj);
                         // TODO string to JSON !!!
-                        var headerOff = 4*Math.ceil((offset+1+textSize)/4.0);  
+                        var headerOff = 4*Math.ceil((1+textSize)/4.0);  
 
                         var fArr = new Float32Array(msg, headerOff);
 

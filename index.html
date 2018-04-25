@@ -43,9 +43,9 @@
 	        console.log('Connected');
 	    },
 	    
-	    OnWebsocketMsg: function(handle, msg, offset) {
+	    OnWebsocketMsg: function(handle, msg) {
                 if (DOCUMENT_READY) {
-                    sap.ui.getCore().byId("TopEveId").getController().OnWebsocketMsg(handle, msg, offset);
+                    sap.ui.getCore().byId("TopEveId").getController().OnWebsocketMsg(handle, msg);
                 }
                 else {
                   handleToWait = handle;

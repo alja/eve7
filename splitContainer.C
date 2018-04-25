@@ -115,16 +115,10 @@ public:
          //RenderData* r = dynamic_cast<RenderData*> (ud);
          RenderData* r = ( RenderData*)(el->GetUserData());
          if (!r) {
-            printf("ddddd no render data\n");
-         }
-         else
-         {
-            printf("redner data  %s\n",  el->GetElementName());
-            printf("redner data fun %s \n",  r->rnrFunction.Data());
-
+            // printf("no render data\n");
+            return;
          }
 
-         printf("starting to build content \n");
          nlohmann::json header;
          header["function"] = "addElementRenderData";
          header["guid"] = el->GetElementId();
@@ -146,9 +140,6 @@ public:
          memcpy(&arr[1], flatHead.c_str(), hs);
          memcpy(&arr[headOff], &r->glVertexBuffer[0], vs*sizeof(float));
             
-         //ROOT::Experimental::TWebWindow::RawBuffer* buff = new ROOT::Experimental::TWebWindow::RawBuffer(arr, sizeof(arr));
-         //std::shared_ptr<ROOT::Experimental::TWebWindow::RawBuffer> mh(buff);
-
          fWindow->SendBinary(connid, &arr[0], totalSize);
 
       }
@@ -188,7 +179,7 @@ public:
             eventScene["arr"] = nlohmann::json::array();
             streamEveElement(eveMng->GetEventScene(), eventScene);
             
-            printf("ffffffffffffffff %s \n", eventScene.dump().c_str());
+            // printf("send scene %s \n", eventScene.dump().c_str());
             jTop["args"] = eventScene["arr"];
             fWindow->Send(connid,jTop.dump());
             // render info
@@ -246,8 +237,6 @@ public:
    void makeWebWindow(const std::string &where = "", bool printSShFw = false)
    {
       fWindow =  ROOT::Experimental::TWebWindowsManager::Instance()->CreateWindow(gROOT->IsBatch());
-      // ?? AMT
-      fWindow->GetServer()->AddLocation("/currentdir/", "/home/alja/future/splitContainer");
 
       fWindow->SetDefaultPage("file:index.html");
 
