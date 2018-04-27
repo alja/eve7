@@ -30,14 +30,20 @@
     var DOCUMENT_READY;
     var msgToWait = [];
     var handleToWait;
+    // var viewManager;
+
     
     function InitCustomUI(handle) {
         // from here you can use  JSROOT.sap variable like
 
         sap.ui.getCore().loadLibrary("sap.tnt"); 
-        jQuery.sap.registerModulePath("eve", "/currentdir/");
+       jQuery.sap.registerModulePath("eve", "/currentdir/");
 
-        
+       /*
+$.getScript("ViewManager.js", function() {
+   alert("Script loaded but not necessarily executed.");
+});
+        */
         handle.SetReceiver({
 	    OnWebsocketOpened: function(handle) {
 	        console.log('Connected');

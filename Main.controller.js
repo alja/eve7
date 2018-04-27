@@ -4,6 +4,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
 
 	    var SplitterController = Controller.extend("eve.Main", {
 
+
 		onInit: function () {
 		    console.log("SPLIT CONTROLLER \n");
 		},
@@ -37,7 +38,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                         
                         el.renderer = obj.renderer;
                         el.geoBuff = fArr;
-                        var v =  this.getView().byId("3D");
+                        var v =  this.getView().byId("3Dzzz");
                         var cont = v.getController();
                         cont.drawExtra(el);                        
                         return;
@@ -48,10 +49,24 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                     // console.log("OnWebsocketMsg response ", msg);
                     var resp = JSON.parse(msg);
                     if (resp.function === "geometry") {
-                        var ele =  this.getView().byId("3D");
+                        {
+                        var ele =  this.getView().byId("3Dzzz");
                         if (!ele) return;
                         var cont = ele.getController();
-                        cont[resp.function](resp.args[0]);
+                            cont[resp.function](resp.args[0]);
+                        }
+                        {
+                        var ele =  this.getView().byId("3Dyyy");
+                        if (!ele) return;
+                        var cont = ele.getController();
+                            cont[resp.function](resp.args[0]);
+                        }
+                        {
+                        var ele =  this.getView().byId("3Dxxx");
+                        if (!ele) return;
+                        var cont = ele.getController();
+                            cont[resp.function](resp.args[0]);
+                        }
                     }
                     else if (resp.function === "event") {
                         console.log("EVE ", resp);
@@ -73,7 +88,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
 
                         console.log("DEBUG .... new event ", this._event);
                         
-                        var ele =  this.getView().byId("3D");
+                        var ele =  this.getView().byId("3Dzzz");
                         var cont = ele.getController();
                         cont.replaceElement(resp.element);
                         this.event();
@@ -82,7 +97,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                     else if (resp.function === "endChanges") {
                         this.endChanges = resp.val;
                         if (resp.val) {
-                        var ele =  this.getView().byId("3D");
+                        var ele =  this.getView().byId("3Dzzz");
                             var cont = ele.getController();
                             cont.endChanges(resp.val);
                         }
@@ -98,7 +113,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                 event: function() {
                       //  this._event = lst;
                         {
-                        var ele =  this.getView().byId("3D");
+                        var ele =  this.getView().byId("3Dzzz");
                         console.log("ele 3D >>>> ", ele);
                         if (!ele) return;
                         var cont = ele.getController();
