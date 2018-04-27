@@ -17,6 +17,9 @@ sap.ui.define([
             DOCUMENT_READY = true;
             sap.ui.getCore().byId("TopEveId").getController().processWaitingMsg();
 
+            viewManager.addView(this.getView().getId(), "3D");
+            console.log("ViewManager 3D ", viewManager);
+
         },
 
         // function called from GuiPanelController

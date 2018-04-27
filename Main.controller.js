@@ -33,14 +33,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                         var fArr = new Float32Array(msg, headerOff);
 
                         var el = this.findElementWithId(obj.guid, this._event);
-
-                        console.log("find element ", el);
                         
                         el.renderer = obj.renderer;
                         el.geoBuff = fArr;
-                        var v =  this.getView().byId("3Dzzz");
-                        var cont = v.getController();
-                        cont.drawExtra(el);                        
+                        viewManager.envokeViewFunc("3D", "drawExtra", el);
                         return;
                     }
 
@@ -49,24 +45,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                     // console.log("OnWebsocketMsg response ", msg);
                     var resp = JSON.parse(msg);
                     if (resp.function === "geometry") {
-                        {
-                        var ele =  this.getView().byId("3Dzzz");
-                        if (!ele) return;
-                        var cont = ele.getController();
-                            cont[resp.function](resp.args[0]);
-                        }
-                        {
-                        var ele =  this.getView().byId("3Dyyy");
-                        if (!ele) return;
-                        var cont = ele.getController();
-                            cont[resp.function](resp.args[0]);
-                        }
-                        {
-                        var ele =  this.getView().byId("3Dxxx");
-                        if (!ele) return;
-                        var cont = ele.getController();
-                            cont[resp.function](resp.args[0]);
-                        }
+                        viewManager.envokeViewFunc("3D", "geometry", resp.args[0]);
+                        
                     }
                     else if (resp.function === "event") {
                         console.log("EVE ", resp);
@@ -84,22 +64,18 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                          resp.element.geoBuff = obj.geoBuff;
                         
 
-                        // TO DO .... destruct original obj, copy binary render data
-
                         console.log("DEBUG .... new event ", this._event);
                         
-                        var ele =  this.getView().byId("3Dzzz");
-                        var cont = ele.getController();
-                        cont.replaceElement(resp.element);
+                        
+                        viewManager.envokeViewFunc("3D", "replaceElement", resp.element);
                         this.event();
 
                     }
                     else if (resp.function === "endChanges") {
                         this.endChanges = resp.val;
                         if (resp.val) {
-                        var ele =  this.getView().byId("3Dzzz");
-                            var cont = ele.getController();
-                            cont.endChanges(resp.val);
+                        viewManager.envokeViewFunc("3D", "endChanges", resp.val);
+
                         }
                     }
                 },

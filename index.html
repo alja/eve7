@@ -5,6 +5,7 @@
       <meta http-equiv="X-UA-Compatible" content="IE=edge">
       <title>Eve7</title>
       <script type="text/javascript" src="jsrootsys/scripts/JSRootCore.js"></script>
+      <script type="text/javascript" src="/currentdir/ViewManager.js"></script>
    </head>
     
    <style>
@@ -33,17 +34,18 @@
     // var viewManager;
 
     
+var viewManager;
     function InitCustomUI(handle) {
         // from here you can use  JSROOT.sap variable like
+ viewManager = new ViewManager();
+viewManager.addView("dd", "dd", "fff");
+console.log("ViewManager \n");
 
         sap.ui.getCore().loadLibrary("sap.tnt"); 
        jQuery.sap.registerModulePath("eve", "/currentdir/");
 
-       /*
-$.getScript("ViewManager.js", function() {
-   alert("Script loaded but not necessarily executed.");
-});
-        */
+       
+
         handle.SetReceiver({
 	    OnWebsocketOpened: function(handle) {
 	        console.log('Connected');
