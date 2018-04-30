@@ -1,5 +1,10 @@
 <mvc:View height="100%" class="sapUiSizeCompact" controllerName="eve.Main"
-   xmlns:mvc="sap.ui.core.mvc" xmlns:l="sap.ui.layout" xmlns="sap.m" xmlns:commons="sap.ui.commons">
+          xmlns:mvc="sap.ui.core.mvc"
+          xmlns:l="sap.ui.layout"
+          xmlns="sap.m"
+          xmlns:commons="sap.ui.commons"
+          xmlns:app="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1"
+          >
    <Page title="" showNavButton="false" showFooter="false"
       showSubHeader="false" id="CanvasMainPage">
       <headerContent>
@@ -82,10 +87,10 @@
               <mvc:layoutData><l:SplitterLayoutData size="33%"/></mvc:layoutData> 
             </mvc:XMLView>
               <l:Splitter id="ViewAreaSplitter">
-            <mvc:XMLView  id="3Dzzz" viewName="eve.3D" height="100%"/>
+            <mvc:XMLView  id="3D" viewName="eve.3D" app:type="3D" height="100%"/>
             <l:Splitter  orientation="Vertical" id="SecondaryView">
-            <mvc:XMLView  id="3Dxxx" viewName="eve.3D" height="100%"/>
-            <mvc:XMLView  id="3Dyyy" viewName="eve.3D" height="100%"/>
+            <mvc:XMLView  id="RhoPhi" viewName="eve.3D" app:type="RhoPhi" height="100%"/>
+            <mvc:XMLView  id="RhoZ" viewName="eve.3D" app:type="RhoZ" height="100%"/>
             </l:Splitter>
               </l:Splitter>
           </l:contentAreas> 

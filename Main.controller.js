@@ -11,7 +11,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                         console.log("view Name ", sv);
 		        console.log("SPLIT CONTROLLER == ", sv.getContentAreas());
                         var ca = sv.getContentAreas();
-                        console.log("ca[0].viewName ",ca[0].sViewName );
+                        console.log("primary ",ca[0].data("type") );
                     }
 
                     {
@@ -19,7 +19,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                         var sv =  this.getView().byId("SecondaryView");
                         var ca = sv.getContentAreas();
                         for (var i = 0; i < ca.length; ++i)
-                            console.log("seconary  ",  i ,  ca[0].sViewName );
+                            console.log("seconary  ",  i ,  ca[i].data("type"));
                     }
 
                     DOCUMENT_READY = true;
@@ -145,7 +145,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                     }
                     // console.log("serach ",valueToSearch, "in", el )
                     if (el.guid == valueToSearch) {
-                        console.log("found it findElementWithId ", el)
+                        // console.log("found it findElementWithId ", el)
                         return el;
                     }
                     if ( el.arr) {
