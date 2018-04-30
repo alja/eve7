@@ -31,20 +31,19 @@
     var DOCUMENT_READY;
     var msgToWait = [];
     var handleToWait;
-    // var viewManager;
-
-    
-var viewManager;
+    var viewManager;
     function InitCustomUI(handle) {
         // from here you can use  JSROOT.sap variable like
- viewManager = new ViewManager();
-viewManager.addView("dd", "dd", "fff");
-console.log("ViewManager \n");
+        viewManager = new ViewManager();
 
         sap.ui.getCore().loadLibrary("sap.tnt"); 
        jQuery.sap.registerModulePath("eve", "/currentdir/");
 
-       
+       var oCore = sap.ui.getCore();
+oCore.attachInit(function() {
+    console.log("tttt attach init");
+});
+
 
         handle.SetReceiver({
 	    OnWebsocketOpened: function(handle) {

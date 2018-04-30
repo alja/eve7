@@ -6,7 +6,24 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
 
 
 		onInit: function () {
-		    console.log("SPLIT CONTROLLER \n");
+                    {
+                        var sv =  this.getView().byId("ViewAreaSplitter");
+                        console.log("view Name ", sv);
+		        console.log("SPLIT CONTROLLER == ", sv.getContentAreas());
+                        var ca = sv.getContentAreas();
+                        console.log("ca[0].viewName ",ca[0].sViewName );
+                    }
+
+                    {
+
+                        var sv =  this.getView().byId("SecondaryView");
+                        var ca = sv.getContentAreas();
+                        for (var i = 0; i < ca.length; ++i)
+                            console.log("seconary  ",  i ,  ca[0].sViewName );
+                    }
+
+                    DOCUMENT_READY = true;
+
 		},
                 getHandle: function () {
                     return this.handle;
@@ -20,10 +37,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                         console.log('TestPanel ArrayBuffer size ' +  msg.byteLength);
                         var sizeArr = new Int8Array(msg, 0, 1);
                         var textSize = sizeArr[0];
-                        console.log("textsize ", textSize);
+                        // console.log("textsize ", textSize);
                         var arr = new Int8Array(msg, 1, textSize);
                         var str = String.fromCharCode.apply(String, arr);
-                        console.log("str = ", str);
+                        // console.log("str = ", str);
                         
                         var obj = JSON.parse(str);
                         console.log("---------------------------- renderer comming ", obj);
@@ -88,13 +105,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                 },
                 event: function() {
                       //  this._event = lst;
-                        {
-                        var ele =  this.getView().byId("3Dzzz");
-                        console.log("ele 3D >>>> ", ele);
-                        if (!ele) return;
-                        var cont = ele.getController();
-                            cont["event"]( this._event);
-                        }
+                    
                         {
                         var ele =  this.getView().byId("Summary");
                        // console.log("ele Sum", ele);
@@ -132,7 +143,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                     if (!el) {
                         el = this._event;
                     }
-                    console.log("serach ",valueToSearch, "in", el )
+                    // console.log("serach ",valueToSearch, "in", el )
                     if (el.guid == valueToSearch) {
                         console.log("found it findElementWithId ", el)
                         return el;
