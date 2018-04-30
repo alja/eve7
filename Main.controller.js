@@ -24,6 +24,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
 
                     DOCUMENT_READY = true;
 
+           this.processWaitingMsg();
+
 		},
                 getHandle: function () {
                     return this.handle;
@@ -97,6 +99,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                     }
                 },
                 processWaitingMsg: function() {
+                    console.log("processWaitingMsg ",msgToWait );
                     for ( var i = 0; i < msgToWait.length; ++i ) {
                         this.OnWebsocketMsg(handleToWait, msgToWait[i]);
                     }

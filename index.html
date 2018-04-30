@@ -28,7 +28,7 @@
    </body>
 
    <script type='text/javascript'>
-    var DOCUMENT_READY;
+    var DOCUMENT_READY = false;
     var msgToWait = [];
     var handleToWait;
     var viewManager;
@@ -47,16 +47,18 @@ oCore.attachInit(function() {
 
         handle.SetReceiver({
 	    OnWebsocketOpened: function(handle) {
-	        console.log('Connected');
+	        console.log('Connected HANDLE ', handle);
 	    },
 	    
 	    OnWebsocketMsg: function(handle, msg) {
                 if (DOCUMENT_READY) {
+                    console.log("index processing DOC READY");
                     sap.ui.getCore().byId("TopEveId").getController().OnWebsocketMsg(handle, msg);
                 }
                 else {
                   handleToWait = handle;
                   msgToWait.push(msg);
+                    console.log("index processing DOC WAIT", msgToWait);
                 }
 	    },
 	    
