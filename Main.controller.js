@@ -69,15 +69,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                             vtArr.push({"header": vo, "glBuff": fArr, "type":vo.viewType})                            
                         }
                         
-                        
                         var el = this.findElementWithId(renderData.guid, this._event);
                         console.log("element", el);
-
                         
                         return;
                     }
-
-
                     
                     // console.log("OnWebsocketMsg response ", msg);
                     var resp = JSON.parse(msg);

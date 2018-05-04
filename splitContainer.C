@@ -177,11 +177,22 @@ public:
       cj["fRnrSelf"] = el->GetRnrSelf();
       cj["fRnrChildren"] = el->GetRnrChildren();
 
-      TObject* o = dynamic_cast<TObject*>(el);
-      if (o)
-          cj["_typename"] = o->ClassName();
+      // core streaming should be implemented in eve class
+      ROOT::Experimental::TEveTrack* track = dynamic_cast<ROOT::Experimental::TEveTrack*>(el);
+      ROOT::Experimental::TEvePointSet* hit = dynamic_cast<ROOT::Experimental::TEvePointSet*>(el);
+      if (track) {
+          cj["_typename"] = track->ClassName();
+          cj["fLineWidth"] = track->GetLineWidth();
+      }
+      else if (hit)
+      {
+          cj["_typename"] = hit->ClassName();
+          cj["fMarkerSize"] = hit->GetMarkerSize();
+      }
       else
+      {
           cj["_typename"] = "undefined";
+      }
    }
    
    void sendRenderData(REX::TEveElement* el, unsigned connid)
