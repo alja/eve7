@@ -35,27 +35,45 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                     
                     if (typeof msg != "string") {
                         
-                        
                         console.log('TestPanel ArrayBuffer size ' +  msg.byteLength);
-                        var sizeArr = new Int8Array(msg, 0, 1);
-                        var textSize = sizeArr[0];
-                        // console.log("textsize ", textSize);
-                        var arr = new Int8Array(msg, 1, textSize);
+                        var textSize = 11;
+                        {
+                        var sizeArr = new Int32Array(msg, 0, 4);
+                            textSize = sizeArr[0];
+                            
+                            console.log("textsize 4", textSize);
+                        }
+                        
+                        var arr = new Int8Array(msg, 4, textSize);
                         var str = String.fromCharCode.apply(String, arr);
-                        // console.log("str = ", str);
+                        console.log("core header = ", str);
                         
-                        var obj = JSON.parse(str);
-                        console.log("---------------------------- renderer comming ", obj);
-                        // TODO string to JSON !!!
-                        var headerOff = 4*Math.ceil((1+textSize)/4.0);  
 
-                        var fArr = new Float32Array(msg, headerOff);
+                        var off = 4+ textSize;
+                        var renderData = JSON.parse(str);
 
-                        var el = this.findElementWithId(obj.guid, this._event);
+                        var vtArr = [];
+                        for (var i = 0; i < renderData["hsArr"].length; ++i)
+                        {
+                            var vha = new Int8Array(msg, off,renderData["hsArr"][i]);
+                            str = String.fromCharCode.apply(String, vha);
+                            // console.log("off ", off, "viewHeader header = ", str);
+                            off  =  4*Math.ceil((off+renderData["hsArr"][i])/4.0);
+                            // console.log("arr off ", off);
+                            var fArr = new Float32Array(msg, off, renderData["bsArr"][i]/4);
+                            off+=renderData["bsArr"][i];
+                            // console.log("farr ", fArr);
+
+                            
+                            var vo = JSON.parse(str);
+                            vtArr.push({"header": vo, "glBuff": fArr, "type":vo.viewType})                            
+                        }
                         
-                        el.renderer = obj.renderer;
-                        el.geoBuff = fArr;
-                        viewManager.envokeViewFunc("3D", "drawExtra", el);
+                        
+                        var el = this.findElementWithId(renderData.guid, this._event);
+                        console.log("element", el);
+
+                        
                         return;
                     }
 

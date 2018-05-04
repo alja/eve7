@@ -30,7 +30,9 @@
 #include <ROOT/TEveGeoShape.hxx>
 #include <ROOT/TEveScene.hxx>
 #include <ROOT/TEveElement.hxx>
+#include <ROOT/TEveProjectionBases.hxx>
 #include <ROOT/TEveManager.hxx>
+#include <ROOT/TEveProjectionManager.hxx>
 #include <ROOT/TEvePointSet.hxx>
 
 #include <ROOT/TEveTrack.hxx>
@@ -43,6 +45,8 @@ namespace REX = ROOT::Experimental;
 // globals
 REX::TEveGeoShapeExtract* topGeo = 0;
 REX::TEveManager* eveMng = 0;
+REX::TEveProjectionManager* mngRhoPhi = 0;
+REX::TEveProjectionManager* mngRhoZ = 0;
 
 struct Conn {
    unsigned m_id;
@@ -51,27 +55,90 @@ struct Conn {
    Conn(unsigned int cId) : m_id(cId) {}
 };
 
-class RenderData {
+class RenderDataViewType
+{
 public:
-   RenderData(){}
-   RenderData(const char* f) {rnrFunction = f;}
+   nlohmann::json header;
+   char*          buffer;
+   size_t         bufferSize;
 
-   void push(float x) {glVertexBuffer.push_back(x); }
+
+   size_t writeToMemory(char* dest, int off) {
+      std::string head = header.dump();
+      size_t hs = head.length();
+      printf("writeToMemory HEAD %s off=[%d] size=[%zu] \n",head.c_str(), off, hs);
+      memcpy(dest + off, head.c_str(), hs);
+
+
+      off = ceil((int(hs)+off)/4.0)*4;
+
+      
+      printf("writeToMemory BIN  off=[%d] size=[%zu] \n", off, bufferSize);
+      memcpy(dest+off, buffer, bufferSize);
+      off += bufferSize;
+      printf("writeToMemory exit  off=[%d] \n", off);
+      return off;
+   }
    
-   TString rnrFunction;
-   std::vector<float>  glVertexBuffer;
-   ClassDef(RenderData, 1);
+   ClassDef(RenderDataViewType, 1);
 };
 
-   void streamSingleEveElement(REX::TEveElement* el,nlohmann::json& jsonParent )
-   {
-      TString flatJS = TBufferJSON::ConvertToJSON(el, el->IsA());  
-      nlohmann::json cj =  nlohmann::json::parse(flatJS.Data());
-      cj["guid"] = el->GetElementId();
-      cj["fRnrSelf"] = el->GetRnrSelf();
-      cj["fRnrChildren"] = el->GetRnrChildren();
-      jsonParent["element"] = cj; 
+class RenderData {
+public:
+   RenderData(REX::TEveElement* el){
+      header["guid"]    = el->GetElementId();
+      // need for decoding on client side
+      header["hsArr"] = nlohmann::json::array();
+      header["bsArr"] = nlohmann::json::array();
    }
+
+   void updateViewTypeSizeArray() {
+      header["hsArr"].clear();
+      header["bsArr"].clear();
+      for (auto it =  reps.begin(); it != reps.end(); ++it)
+      {
+         int hs = it->header.dump().length();
+         header["hsArr"].push_back(hs);
+         header["bsArr"].push_back(it->bufferSize);
+      }
+   }
+
+   int getTotalSizeOfViewTypeData(int coreOff) {
+      int nt = header["hsArr"].size();
+      int off = coreOff;
+      for (int i = 0; i < nt; ++i)
+      {
+         int hs = header["hsArr"].at(i);
+         off = 4* ceil((off + hs)/4.0);
+         // presume we are saving floats or ints!!
+         int bs = header["bsArr"].at(i);
+         off += bs;
+      }
+      
+      /*
+      printf("getTotalSizeOfViewTypeData %s\n ", header.dump().c_str());
+      for (nlohmann::json::iterator it = header["hsArr"].begin(); it != header["hsArr"].end(); ++it) {
+         float ff = float(*it)/4.0;
+         int headOff = ceil(ff)*4;
+         printf("getTotalSizeOfViewTypeData head size %d\n ", headOff);
+         n += headOff;
+      }
+      
+      for (nlohmann::json::iterator it = header["bsArr"].begin(); it != header["bsArr"].end(); ++it) {
+         int off = *it;
+         printf("getTotalSizeOfViewTypeData buffer size %d \n", off);
+         n += off;
+      }
+      */
+      int n = off - coreOff; 
+      printf("exit getTotalSize of view type info!!! %d \n", n);
+      return n;
+   }
+   
+   nlohmann::json header;   
+   std::vector<RenderDataViewType>  reps;
+   ClassDef(RenderData, 1);
+};
 
 
 class WHandler {
@@ -85,15 +152,11 @@ public:
    virtual ~WHandler() { printf("Destructor!!!!\n"); }
    
 
-   void streamEveElement(REX::TEveElement* el,nlohmann::json& jsonParent )
+   void streamEveElementCore(REX::TEveElement* el, nlohmann::json& jsonParent )
    {
       // printf("BEGIN stream element %s \n", el->GetElementName() );
-      
-      TString flatJS = TBufferJSON::ConvertToJSON(el, el->IsA());  
-      nlohmann::json cj =  nlohmann::json::parse(flatJS.Data());
-      cj["guid"] = el->GetElementId();
-      cj["fRnrSelf"] = el->GetRnrSelf();
-      cj["fRnrChildren"] = el->GetRnrChildren();
+      nlohmann::json cj;
+      getElementCoreJson(el, cj);
       jsonParent["arr"].push_back(cj);
 
       int loci = jsonParent["arr"].size() -1;
@@ -103,48 +166,64 @@ public:
       for (auto it =  el->BeginChildren(); it != el->EndChildren(); ++it)
       {
          // printf(".... stream child %s of parent %s \n", (*it)->GetElementName(), el->GetElementName());
-         streamEveElement(*it, jsonParent["arr"][loci] );
+         streamEveElementCore(*it, jsonParent["arr"][loci] );
       }      
    }
 
+   void getElementCoreJson(REX::TEveElement* el, nlohmann::json& cj)
+   {
+      cj["fName"] = el->GetElementName();
+      cj["guid"] = el->GetElementId();
+      cj["fRnrSelf"] = el->GetRnrSelf();
+      cj["fRnrChildren"] = el->GetRnrChildren();
+
+      TObject* o = dynamic_cast<TObject*>(el);
+      if (o)
+          cj["_typename"] = o->ClassName();
+      else
+          cj["_typename"] = "undefined";
+   }
+   
    void sendRenderData(REX::TEveElement* el, unsigned connid)
    {
-      // printf("send renderdata  %s\n", el->GetElementName());
       if (el->GetUserData()) {
-         void* ud = el->GetUserData();
-         //RenderData* r = dynamic_cast<RenderData*> (ud);
-         RenderData* r = ( RenderData*)(el->GetUserData());
-         if (!r) {
-            // printf("no render data\n");
-            return;
+         RenderData* rd = (RenderData*) el->GetUserData();
+         std::string headerFlat = rd->header.dump();
+         int hsf = int(headerFlat.size());
+         
+         printf("-----------------sendRender data %s\n", el->GetElementName());
+         int totalRenderDataSize = rd->getTotalSizeOfViewTypeData(hsf+sizeof(int));
+         int totalSize = headerFlat.size() + totalRenderDataSize + sizeof(int);
+         printf("CORE headSize = %d , totalSize = %d   \n",hsf, totalSize );
+         char* buff = (char*)malloc(totalSize);
+
+         int off = 0;
+
+         // first top header size
+         memcpy(buff, &hsf, sizeof(int));
+         off += sizeof(int);
+      
+         // write size of client data header, core information
+         memcpy(buff + off, headerFlat.c_str(), headerFlat.size());
+         off += headerFlat.size();
+
+         
+         // write view type representations
+         for (auto it = rd->reps.begin(); it != rd->reps.end(); ++it)
+         {
+            off = it->writeToMemory(buff, off);
+            //off += n;
          }
 
-         nlohmann::json header;
-         header["function"] = "addElementRenderData";
-         header["guid"] = el->GetElementId();
-         header["renderer"] = r->rnrFunction.Data();
+         printf("total %d off %d\n", totalSize, off);
 
-         std::string flatHead = header.dump();
-         int hs = int(flatHead.size());
-         int vs = int(r->glVertexBuffer.size());
-
-         // offset must be a factor of 4
-         float ff = (hs+1.0)/4.0;
+         fWindow->SendBinary(connid, buff, totalSize);
          
-         int headOff = ceil(ff)*4;
-         // printf("ceil of %d to %d \n", hs+1, headOff);
-
-         uint totalSize = vs*sizeof(float)+headOff;
-         uint8_t arr[totalSize];
-         arr[0]=hs; // write precise size
-         memcpy(&arr[1], flatHead.c_str(), hs);
-         memcpy(&arr[headOff], &r->glVertexBuffer[0], vs*sizeof(float));
-            
-         fWindow->SendBinary(connid, &arr[0], totalSize);
-
-      }
-      for (auto it =  el->BeginChildren(); it != el->EndChildren(); ++it)
-         sendRenderData(*it, connid);
+         // free(buff);
+        }
+         for (auto it = el->BeginChildren(); it != el->EndChildren(); ++it)
+            sendRenderData(*it, connid);
+    
    }
 
    
@@ -177,7 +256,7 @@ public:
             jTop["function"] = "event";
             nlohmann::json eventScene;
             eventScene["arr"] = nlohmann::json::array();
-            streamEveElement(eveMng->GetEventScene(), eventScene);
+            streamEveElementCore(eveMng->GetEventScene(), eventScene);
             
             // printf("send scene %s \n", eventScene.dump().c_str());
             jTop["args"] = eventScene["arr"];
@@ -226,7 +305,11 @@ public:
       
          nlohmann::json resp;
          resp["function"] = "replaceElement";
-         streamSingleEveElement(el, resp);
+
+         nlohmann::json ce;
+         getElementCoreJson(el, cj);
+         resp["element"] = ce; 
+         
          for (auto i = m_connList.begin(); i != m_connList.end(); ++i)
          {
             fWindow->Send(i->m_id, resp.dump());
@@ -278,14 +361,11 @@ REX::TEvePointSet* getPointSet(int npoints = 2, float s=2, int color=4)
 {
    TRandom r(0);
    REX::TEvePointSet* ps = new REX::TEvePointSet("fu");
-   RenderData* rnrData = new RenderData("makeHit");
+   ps->Reset(npoints);
+
    for (Int_t i=0; i<npoints; ++i)
-   {
-      for (int k = 0; k<3; ++k)
-         rnrData->push(r.Uniform(-s,s));
-   }
-   ps->SetUserData(rnrData);
-   
+      ps->SetPoint(i, r.Uniform(-s,s),r.Uniform(-s,s),r.Uniform(-s,s));
+      
    ps->SetMarkerColor(color);
    ps->SetMarkerSize(r.Uniform(1, 2));
    ps->SetMarkerStyle(4);
@@ -293,19 +373,6 @@ REX::TEvePointSet* getPointSet(int npoints = 2, float s=2, int color=4)
    return ps;
 }
 
-void makeTrack(REX::TEveTrack* track)
-{
-   track->MakeTrack();
-   float* arr = track->GetP();
-   RenderData* rnrData = new RenderData("makeTrack");
-   for (Int_t i=0; i<track->GetN(); ++i) {
-      rnrData->push(arr[3*i]);
-      rnrData->push(arr[3*i+1]);
-      rnrData->push(arr[3*i+2]);
-   }
-   track->Reset();
-   track->SetUserData(rnrData);
-}
 
 REX::TEveGeoShapeExtract* getShapeExtract(REX::TEveGeoShape* gs)
 {
@@ -350,13 +417,14 @@ void makeTestScene()
    auto ps1 = getPointSet(20, 100, 3);
    ps1->SetElementName("Points_1");
    pntHolder->AddElement(ps1);
-   
+
+   /*
    auto ps2 = getPointSet(10, 200, 4);
    ps2->SetElementName("Points_2");
    pntHolder->AddElement(ps2);
-
+   */
    event->AddElement(pntHolder);
-   
+   /*
    // tracks
    //
    auto prop = new REX::TEveTrackPropagator();
@@ -369,7 +437,7 @@ void makeTestScene()
       p->SetProductionVertex(0.068, 0.2401, -0.07629, 1);
       p->SetMomentum(4.82895, 2.35083, -0.611757, 1);
       auto track = new REX::TEveTrack(p, 1, prop);
-      makeTrack(track);
+      track->MakeTrack();
       track->SetElementName("TestTrack_1");
       trackHolder->AddElement(track);
    }
@@ -379,14 +447,87 @@ void makeTestScene()
       p->SetProductionVertex(0.068, 0.2401, -0.07629, 1);
        p->SetMomentum(-0.82895, 0.83, -1.1757, 1);
       auto track = new REX::TEveTrack(p, 1, prop);
-      makeTrack(track);
+      track->MakeTrack();
       track->SetMainColor(kBlue);
       track->SetElementName("TestTrack_2");
       trackHolder->AddElement(track);
    }
    event->AddElement(trackHolder);
+   */
 }
 
+
+void makeClientDataFromTrack(REX::TEveTrack* track, RenderData* rd, std::string type)
+{
+   rd->reps.push_back(RenderDataViewType());
+   RenderDataViewType& data = rd->reps.back();
+   
+   data.header["viewType"] = type;
+   data.header["rnrFunc"] = "makeTrack";
+   data.header["npoints"] = track->GetN();
+   data.buffer = (char*)track->GetP();
+   data.bufferSize = track->GetN()*4;   
+
+   for (auto pit = track->BeginProjecteds(); pit != track->EndProjecteds(); ++pit)
+   {
+      REX::TEveProjected* projected = *pit;
+      REX::TEveTrack* projTrack = dynamic_cast<REX::TEveTrack*>(projected);      
+      makeClientDataFromTrack(projTrack, rd, projected->GetManager()->GetProjection()->GetName());
+   }
+   
+}
+
+void makeClientDataFromPointSet(REX::TEvePointSet* hit,  RenderData* rd, std::string type)
+{
+   rd->reps.push_back(RenderDataViewType());
+   RenderDataViewType& vtd = rd->reps.back();
+   
+   vtd.header["viewType"] = type;
+   vtd.header["rnrFunc"] = "makeHit";
+   vtd.header["npoints"] = hit->GetN();
+   vtd.buffer = (char*)hit->GetP();
+
+   // test
+   float* x = hit->GetP();
+   for (int i = 0; i < hit->GetN(); ++i) {
+      printf("%d %f\n", i, x[i]);
+   }
+   vtd.bufferSize = hit->GetN()*4;
+   
+   for (auto pit = hit->BeginProjecteds(); pit != hit->EndProjecteds(); ++pit)
+   {
+      REX::TEveProjected* projected = *pit;
+      REX::TEvePointSet* projPointSet = dynamic_cast<REX::TEvePointSet*>(projected);
+      makeClientDataFromPointSet(projPointSet, rd, projected->GetManager()->GetProjection()->GetName());
+   }
+}
+
+void createStreamableRenderData(REX::TEveElement* el)
+{
+   // AMT this should be part of TEveElement specific type classes
+
+   RenderData* rd = 0;
+   
+   if (dynamic_cast<ROOT::Experimental::TEveTrack*>(el))
+   {
+      rd =  new RenderData(el);
+      makeClientDataFromTrack((REX::TEveTrack*)el, rd, "3D");
+   }
+   else if (dynamic_cast<ROOT::Experimental::TEvePointSet*>(el))
+   {
+      rd =  new RenderData(el);
+      makeClientDataFromPointSet((ROOT::Experimental::TEvePointSet*)el, rd, "3D");
+   }
+   if (rd) {
+      rd->updateViewTypeSizeArray();
+      el->SetUserData(rd);
+   }
+   
+   for (auto it =  el->BeginChildren(); it != el->EndChildren(); ++it)
+      createStreamableRenderData(*it);
+
+   
+}
 
 WHandler* handler = nullptr;
 
@@ -394,7 +535,22 @@ void splitContainer(bool printSShFw = false)
 {
    gSystem->Load("libROOTEve");
    eveMng = REX::TEveManager::Create();
+   
    makeTestScene();
+   
+   // project geometry and event scene
+   mngRhoPhi = new REX::TEveProjectionManager(REX::TEveProjection::kPT_RPhi);      
+    mngRhoPhi->ImportElements(REX::gEve->GetGlobalScene());    
+     mngRhoPhi->ImportElements(REX::gEve->GetEventScene());
+
+   
+   // project geometry and event scene
+   mngRhoZ = new REX::TEveProjectionManager(REX::TEveProjection::kPT_RhoZ); 
+   //mngRhoZ->ImportElements(REX::gEve->GetGlobalScene());
+   //mngRhoZ->ImportElements(REX::gEve->GetEventScene());
+
+   createStreamableRenderData(REX::gEve->GetEventScene());
+   
    handler = new WHandler();
    handler->makeWebWindow("", printSShFw);
 }
