@@ -6,22 +6,34 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
 
 
 		onInit: function () {
+
+           
+            console.log("ViewManager 3D ",  this);
+            console.log("ViewManager 3D view ",this.getView());
+            console.log("ViewManager 3D view ",this.getView().data("type"));
+                    
                     {
                         var sv =  this.getView().byId("ViewAreaSplitter");
                         console.log("view Name ", sv);
 		        console.log("SPLIT CONTROLLER == ", sv.getContentAreas());
                         var ca = sv.getContentAreas();
-                        console.log("primary ",ca[0].data("type") );
+                        console.log("primary ",ca[0].data("type"), ca[0] );
+                        viewManager.addView(ca[0].getId(), ca[0].data("type"));
                     }
 
                     {
 
                         var sv =  this.getView().byId("SecondaryView");
                         var ca = sv.getContentAreas();
-                        for (var i = 0; i < ca.length; ++i)
-                            console.log("seconary  ",  i ,  ca[i].data("type"));
+                        for (var i = 0; i < ca.length; ++i) {
+                            console.log("seconary  ",  i ,  ca[i].data("type"), ca[i].getId());
+                            viewManager.addView(ca[i].getId(), ca[i].data("type"));
+
+                        }
                     }
 
+                    console.log("main on init ", viewManager);
+                    // 
                     DOCUMENT_READY = true;
 
            this.processWaitingMsg();
@@ -53,6 +65,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                         var renderData = JSON.parse(str);
 
                         var vtArr = [];
+                        var el = this.findElementWithId(renderData.guid, this._event);
                         for (var i = 0; i < renderData["hsArr"].length; ++i)
                         {
                             var vha = new Int8Array(msg, off,renderData["hsArr"][i]);
@@ -66,11 +79,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
 
                             
                             var vo = JSON.parse(str);
-                            vtArr.push({"header": vo, "glBuff": fArr, "type":vo.viewType})                            
+                            vo["glBuff"] = fArr;
+                            el[vo.viewType] = vo;
+                           // vtArr.push({"header": vo, "glBuff": fArr, "type":vo.viewType})                            
                         }
-                        
-                        var el = this.findElementWithId(renderData.guid, this._event);
-                        console.log("element", el);
+
+                        console.log("element with rendering info ", el);
+                       
                         
                         return;
                     }

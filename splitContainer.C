@@ -183,11 +183,13 @@ public:
       if (track) {
           cj["_typename"] = track->ClassName();
           cj["fLineWidth"] = track->GetLineWidth();
+          cj["fLineColor"] = track->GetLineColor();
       }
       else if (hit)
       {
           cj["_typename"] = hit->ClassName();
           cj["fMarkerSize"] = hit->GetMarkerSize();
+          cj["fMarkerColor"] = hit->GetMarkerColor();
       }
       else
       {

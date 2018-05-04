@@ -15,8 +15,6 @@ sap.ui.define([
 	    ResizeHandler.register(this.getView(), this.onResize.bind(this));
             this.fast_event = [];
 
-            viewManager.addView(this.getView().getId(), "3D");
-            console.log("ViewManager 3D ", viewManager);
 
         },
 
