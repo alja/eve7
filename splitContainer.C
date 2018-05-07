@@ -431,13 +431,13 @@ void makeTestScene()
    ps1->SetElementName("Points_1");
    pntHolder->AddElement(ps1);
 
-   /*
+   
    auto ps2 = getPointSet(10, 200, 4);
    ps2->SetElementName("Points_2");
    pntHolder->AddElement(ps2);
-   */
+
    event->AddElement(pntHolder);
-   /*
+   
    // tracks
    //
    auto prop = new REX::TEveTrackPropagator();
@@ -466,7 +466,7 @@ void makeTestScene()
       trackHolder->AddElement(track);
    }
    event->AddElement(trackHolder);
-   */
+  
 }
 
 
@@ -502,10 +502,12 @@ void makeClientDataFromPointSet(REX::TEvePointSet* hit,  RenderData* rd, std::st
 
    // test
    float* x = hit->GetP();
+   /*
    for (int i = 0; i < hit->GetN(); ++i) {
-      printf("%d %f\n", i, x[i]);
+      printf("%s %d (%f, %f, %f)\n", hit->GetElementName(), i, x[i*3], x[i*3+1],  x[i*3+2]);
    }
-   vtd.bufferSize = hit->GetN()*4;
+   */
+   vtd.bufferSize = hit->GetN()*3*4;
    
    for (auto pit = hit->BeginProjecteds(); pit != hit->EndProjecteds(); ++pit)
    {
@@ -559,8 +561,8 @@ void splitContainer(bool printSShFw = false)
    
    // project geometry and event scene
    mngRhoZ = new REX::TEveProjectionManager(REX::TEveProjection::kPT_RhoZ); 
-   //mngRhoZ->ImportElements(REX::gEve->GetGlobalScene());
-   //mngRhoZ->ImportElements(REX::gEve->GetEventScene());
+   mngRhoZ->ImportElements(REX::gEve->GetGlobalScene());
+   mngRhoZ->ImportElements(REX::gEve->GetEventScene());
 
    createStreamableRenderData(REX::gEve->GetEventScene());
    

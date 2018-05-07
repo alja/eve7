@@ -46,7 +46,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                     this.handle = handle;
                     
                     if (typeof msg != "string") {
-                        
+
                         console.log('TestPanel ArrayBuffer size ' +  msg.byteLength);
                         var textSize = 11;
                         {
@@ -66,6 +66,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
 
                         var vtArr = [];
                         var el = this.findElementWithId(renderData.guid, this._event);
+                        console.log("element bin msg ", el);
                         for (var i = 0; i < renderData["hsArr"].length; ++i)
                         {
                             var vha = new Int8Array(msg, off,renderData["hsArr"][i]);
@@ -81,7 +82,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                             var vo = JSON.parse(str);
                             vo["glBuff"] = fArr;
                             el[vo.viewType] = vo;
-                           // vtArr.push({"header": vo, "glBuff": fArr, "type":vo.viewType})                            
+                            // vtArr.push({"header": vo, "glBuff": fArr, "type":vo.viewType})
+
+                            viewManager.updateElement(el);
                         }
 
                         console.log("element with rendering info ", el);
@@ -93,7 +96,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                     // console.log("OnWebsocketMsg response ", msg);
                     var resp = JSON.parse(msg);
                     if (resp.function === "geometry") {
-                        viewManager.envokeViewFunc("3D", "geometry", resp.args[0]);
+                        viewManager.envokeViewFunc( "geometry", resp.args[0]);
                         
                     }
                     else if (resp.function === "event") {
