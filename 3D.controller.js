@@ -1,3 +1,25 @@
+
+/*
+function EveJetConeGeometry(vertices)
+{
+    THREE.BufferGeometry.call( this );
+
+    this.addAttribute( 'position', new THREE.BufferAttribue( vertices, 3 ) );
+
+    var N = vertices.length / 3;
+    var idcs = [];
+    for (var i = 1; i < N - 1; ++i)
+    {
+        idcs.push( i ); idcs.push( 0 ); idcs.push( i + 1 );
+    }
+    this.setIndex( idcs );
+}
+
+EveJetConeGeometry.prototype = Object.create( THREE.BufferGeometry.prototype );
+EveJetConeGeometry.prototype.constructor = EveJetConeGeometry;
+*/
+
+
 sap.ui.define([
     'sap/ui/jsroot/GuiPanelController',
     'sap/ui/model/json/JSONModel',
@@ -111,6 +133,28 @@ sap.ui.define([
             this.geo_painter.getExtrasContainer().add(line);
             line.visible = track.fRnrSelf;
             return line;
+        },
+        makeJet: function(jet) {
+            //var geo = new EveJetConeGeometry(jet.geoBuff);
+            var geo = new THREE.BufferGeometry;
+            geo.addAttribute('position', new THREE.BufferAttribute( jet.geoBuff, 3 ) );
+            {
+                var N = jet.geoBuff.length / 3;
+                var idcs = [];
+                idcs.push( N - 1 );  idcs.push( 0 );  idcs.push( 1 );
+                for (var i = 1; i < N - 1; ++i)
+                {
+                    idcs.push( i );  idcs.push( 0 );  idcs.push( i + 1 );
+                }
+                geo.setIndex( idcs );
+            }
+
+            var jet_ro = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: new THREE.Color(0xff0000) }));
+            jet_ro.geo_name = jet.fName;
+            jet_ro.geo_object = jet;
+            this.geo_painter.getExtrasContainer().add(jet_ro);
+            jet_ro.visible = jet.fRnrSelf;
+            return jet_ro;
         },
         replaceElement:function(el) {
             var ec = this.geo_painter.getExtrasContainer();

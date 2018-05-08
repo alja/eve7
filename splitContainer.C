@@ -32,6 +32,7 @@
 #include <ROOT/TEveElement.hxx>
 #include <ROOT/TEveManager.hxx>
 #include <ROOT/TEvePointSet.hxx>
+#include <ROOT/TEveJetCone.hxx>
 
 #include <ROOT/TEveTrack.hxx>
 #include <ROOT/TEveTrackPropagator.hxx>
@@ -40,44 +41,36 @@
 
 namespace REX = ROOT::Experimental;
 
+using RenderData = REX::RenderData;
+
 // globals
 REX::TEveGeoShapeExtract* topGeo = 0;
 REX::TEveManager* eveMng = 0;
 
-struct Conn {
-   unsigned m_id;
+struct Conn
+{
+   unsigned fId;
 
-   Conn(): m_id(0) {}
-   Conn(unsigned int cId) : m_id(cId) {}
+   Conn() : fId(0) {}
+   Conn(unsigned int cId) : fId(cId) {}
 };
 
-class RenderData {
-public:
-   RenderData(){}
-   RenderData(const char* f) {rnrFunction = f;}
-
-   void push(float x) {glVertexBuffer.push_back(x); }
-   
-   TString rnrFunction;
-   std::vector<float>  glVertexBuffer;
-   ClassDef(RenderData, 1);
-};
-
-   void streamSingleEveElement(REX::TEveElement* el,nlohmann::json& jsonParent )
-   {
-      TString flatJS = TBufferJSON::ConvertToJSON(el, el->IsA());  
-      nlohmann::json cj =  nlohmann::json::parse(flatJS.Data());
-      cj["guid"] = el->GetElementId();
-      cj["fRnrSelf"] = el->GetRnrSelf();
-      cj["fRnrChildren"] = el->GetRnrChildren();
-      jsonParent["element"] = cj; 
-   }
+void streamSingleEveElement(REX::TEveElement* el,nlohmann::json& jsonParent )
+{
+   TString flatJS = TBufferJSON::ConvertToJSON(el, el->IsA());
+   nlohmann::json cj =  nlohmann::json::parse(flatJS.Data());
+   cj["guid"] = el->GetElementId();
+   cj["fRnrSelf"] = el->GetRnrSelf();
+   cj["fRnrChildren"] = el->GetRnrChildren();
+   jsonParent["element"] = cj;
+}
 
 
-class WHandler {
+class WHandler
+{
 private:
    std::shared_ptr<ROOT::Experimental::TWebWindow>  fWindow;
-   std::vector<Conn> m_connList;
+   std::vector<Conn>                                fConnList;
 
 public:
    WHandler() {};
@@ -110,7 +103,8 @@ public:
    void sendRenderData(REX::TEveElement* el, unsigned connid)
    {
       // printf("send renderdata  %s\n", el->GetElementName());
-      if (el->GetUserData()) {
+      if (el->GetUserData())
+      {
          void* ud = el->GetUserData();
          //RenderData* r = dynamic_cast<RenderData*> (ud);
          RenderData* r = ( RenderData*)(el->GetUserData());
@@ -121,12 +115,12 @@ public:
 
          nlohmann::json header;
          header["function"] = "addElementRenderData";
-         header["guid"] = el->GetElementId();
-         header["renderer"] = r->rnrFunction.Data();
+         header["guid"]     = el->GetElementId();
+         header["renderer"] = r->fRnrFunction.Data();
 
          std::string flatHead = header.dump();
          int hs = int(flatHead.size());
-         int vs = int(r->glVertexBuffer.size());
+         int vs = int(r->fGlVertexBuffer.size());
 
          // offset must be a factor of 4
          float ff = (hs+1.0)/4.0;
@@ -134,11 +128,11 @@ public:
          int headOff = ceil(ff)*4;
          // printf("ceil of %d to %d \n", hs+1, headOff);
 
-         uint totalSize = vs*sizeof(float)+headOff;
+         uint totalSize = headOff + vs * sizeof(float);
          uint8_t arr[totalSize];
          arr[0]=hs; // write precise size
          memcpy(&arr[1], flatHead.c_str(), hs);
-         memcpy(&arr[headOff], &r->glVertexBuffer[0], vs*sizeof(float));
+         memcpy(&arr[headOff], &r->fGlVertexBuffer[0], vs * sizeof(float));
             
          fWindow->SendBinary(connid, &arr[0], totalSize);
 
@@ -151,7 +145,7 @@ public:
    void ProcessData(unsigned connid, const std::string &arg)
    {
       if (arg == "CONN_READY") {
-         m_connList.push_back(Conn(connid));
+         fConnList.push_back(Conn(connid));
          printf("connection established %u\n", connid);
          
          if (1) {
@@ -192,24 +186,24 @@ public:
       }
 
       // find connection object
-      std::vector<Conn>::iterator conn =  m_connList.end();
-      for (auto i = m_connList.begin(); i != m_connList.end(); ++i)
+      std::vector<Conn>::iterator conn =  fConnList.end();
+      for (auto i = fConnList.begin(); i != fConnList.end(); ++i)
       {
-         if (i->m_id == connid)
+         if (i->fId == connid)
          {
             conn = i;
             break;
          }
       }
       // this should not happen, just check
-      if (conn == m_connList.end()) {
+      if (conn == fConnList.end()) {
          printf("error, conenction not found!");
          return;
       }
        
       if (arg == "CONN_CLOSED") {
          printf("connection closed\n");
-         m_connList.erase(conn);
+         fConnList.erase(conn);
          return;
       }
       else {
@@ -227,9 +221,9 @@ public:
          nlohmann::json resp;
          resp["function"] = "replaceElement";
          streamSingleEveElement(el, resp);
-         for (auto i = m_connList.begin(); i != m_connList.end(); ++i)
+         for (auto i = fConnList.begin(); i != fConnList.end(); ++i)
          {
-            fWindow->Send(i->m_id, resp.dump());
+            fWindow->Send(i->fId, resp.dump());
          }     
       }
    }
@@ -385,6 +379,18 @@ void makeTestScene()
       trackHolder->AddElement(track);
    }
    event->AddElement(trackHolder);
+
+   // jets
+   auto jetHolder = new REX::TEveElementList("Jets");
+   {
+      auto jet = new REX::TEveJetCone("Jet_1");
+      jet->SetCylinder(2*kR_max, 2*kZ_d);
+      jet->AddEllipticCone(0.7, 1, 0.1, 0.3);
+      jet->CalculatePoints();
+
+      jetHolder->AddElement(jet);
+   }
+   event->AddElement(jetHolder);
 }
 
 
