@@ -33,6 +33,7 @@
 #include <ROOT/TEveProjectionBases.hxx>
 #include <ROOT/TEveManager.hxx>
 #include <ROOT/TEveProjectionManager.hxx>
+#include <ROOT/TEvePolygonSetProjected.hxx>
 #include <ROOT/TEvePointSet.hxx>
 
 #include <ROOT/TEveTrack.hxx>
@@ -48,6 +49,17 @@ REX::TEveManager* eveMng = 0;
 REX::TEveProjectionManager* mngRhoPhi = 0;
 REX::TEveProjectionManager* mngRhoZ = 0;
 
+
+REX::TEveGeoShapeExtract* getShapeExtract(REX::TEveGeoShape* gs)
+{
+      auto ese = new REX::TEveGeoShapeExtract();
+      ese->SetName(gs->GetElementName());
+      ese->SetShape(gs->GetShape());
+      TColor* c = gROOT->GetColor(gs->GetMainColor());
+      float rgba [4] = {c->GetRed(), c->GetGreen(), c->GetBlue(), 1 - float(gs->GetMainTransparency())/100};
+      ese->SetRGBA(rgba);
+      return ese;
+}
 struct Conn {
    unsigned m_id;
 
@@ -66,22 +78,25 @@ public:
    size_t writeToMemory(char* dest, int off) {
       std::string head = header.dump();
       size_t hs = head.length();
-      printf("writeToMemory HEAD %s off=[%d] size=[%zu] \n",head.c_str(), off, hs);
+      // printf("writeToMemory HEAD %s off=[%d] size=[%zu] \n",head.c_str(), off, hs);
       memcpy(dest + off, head.c_str(), hs);
 
 
       off = ceil((int(hs)+off)/4.0)*4;
 
       
-      printf("writeToMemory BIN  off=[%d] size=[%zu] \n", off, bufferSize);
+      // printf("writeToMemory BIN  off=[%d] size=[%zu] \n", off, bufferSize);
       memcpy(dest+off, buffer, bufferSize);
       off += bufferSize;
-      printf("writeToMemory exit  off=[%d] \n", off);
+      // printf("writeToMemory exit  off=[%d] \n", off);
       return off;
    }
    
    ClassDef(RenderDataViewType, 1);
 };
+
+
+
 
 class RenderData {
 public:
@@ -131,7 +146,7 @@ public:
       }
       */
       int n = off - coreOff; 
-      printf("exit getTotalSize of view type info!!! %d \n", n);
+      // printf("exit getTotalSize of view type info!!! %d \n", n);
       return n;
    }
    
@@ -204,10 +219,10 @@ public:
          std::string headerFlat = rd->header.dump();
          int hsf = int(headerFlat.size());
          
-         printf("-----------------sendRender data %s\n", el->GetElementName());
+         // printf("-----------------sendRender data %s\n", el->GetElementName());
          int totalRenderDataSize = rd->getTotalSizeOfViewTypeData(hsf+sizeof(int));
          int totalSize = headerFlat.size() + totalRenderDataSize + sizeof(int);
-         printf("CORE headSize = %d , totalSize = %d   \n",hsf, totalSize );
+         //  printf("CORE headSize = %d , totalSize = %d   \n",hsf, totalSize );
          char* buff = (char*)malloc(totalSize);
 
          int off = 0;
@@ -228,7 +243,7 @@ public:
             //off += n;
          }
 
-         printf("total %d off %d\n", totalSize, off);
+         // printf("total %d off %d\n", totalSize, off);
 
          fWindow->SendBinary(connid, buff, totalSize);
          
@@ -250,11 +265,69 @@ public:
             TString jsonGeo = TBufferJSON::ConvertToJSON(topGeo, gROOT->GetClass("ROOT::Experimental::TEveGeoShapeExtract"));
             nlohmann::json j;
             j["function"] = "geometry";
-            j["args"] = {nlohmann::json::parse(jsonGeo.Data())};
+            j["3D"] = {nlohmann::json::parse(jsonGeo.Data())};
+
+            {
+               auto fake = new REX::TEveGeoShapeExtract(mngRhoPhi->GetProjection()->GetName());
                
-            //  printf("Sending geo json %s\n", j.dump().c_str());
+               TGeoTube* box = new TGeoTube( 250, 250, 1);
+
+               REX::TEveGeoShape* shape = new REX::TEveGeoShape;
+               shape->SetShape(box);
+               shape->SetMainTransparency(20);
+               fake->AddElement(getShapeExtract(shape));
+               
+            TString jsonFake = TBufferJSON::ConvertToJSON(fake, gROOT->GetClass("ROOT::Experimental::TEveGeoShapeExtract"));
+               j[mngRhoPhi->GetProjection()->GetName()] = {nlohmann::json::parse(jsonFake.Data())};
+            }
+
+            { auto fake = new REX::TEveGeoShapeExtract(mngRhoPhi->GetProjection()->GetName());
+               
+               TGeoBBox* box = new TGeoBBox( 300, 250, 1);
+               REX::TEveGeoShape* shape = new REX::TEveGeoShape;
+               shape->SetShape(box);
+               shape->SetMainTransparency(80);
+               fake->AddElement(getShapeExtract(shape));
+               
+            TString jsonFake = TBufferJSON::ConvertToJSON(fake, gROOT->GetClass("ROOT::Experimental::TEveGeoShapeExtract"));
+               j[mngRhoZ->GetProjection()->GetName()] = {nlohmann::json::parse(jsonFake.Data())};
+            }
+              
+
+            /*
+            {
+               auto topGeoProj = new REX::TEveGeoShapeExtract(mngRhoPhi->GetProjection()->GetName());
+               REX::TEveElement* s = mngRhoPhi->FindChild("Geometry scene [P]");
+               for (auto it = s->BeginChildren(); it != s->EndChildren(); ++it)
+               {
+                  printf("add proj shape %s \n", (*it)->GetElementName());
+                  REX::TEvePolygonSetProjected* ps = dynamic_cast<ROOT::Experimental::TEvePolygonSetProjected*>(*it);
+                  ps->DumpPolys();
+                  //topGeoProj->AddElement(getShapeExtract(gs));
+               }
+               
+               TString jsonGeoProj = TBufferJSON::ConvertToJSON(topGeoProj, gROOT->GetClass("ROOT::Experimental::TEveGeoShapeExtract"));
+               printf("----- %s", jsonGeoProj.Data());
+               j[mngRhoPhi->GetProjection()->GetName()] = {nlohmann::json::parse(jsonGeoProj.Data())};
+            }
+            */
+            /*
+            {
+               auto topGeoProj = new REX::TEveGeoShapeExtract(mngRhoZ->GetProjection()->GetName());
+               REX::TEveElement* s = mngRhoZ->FindChild("Geometry scene [P]");
+               for (auto it = s->BeginChildren(); it != s->EndChildren(); ++it)
+               {
+                  REX::TEveGeoShape* gs = dynamic_cast<REX::TEveGeoShape*>(*it);
+                  topGeoProj->AddElement(getShapeExtract(gs));
+               }
+               
+               TString jsonGeoProj = TBufferJSON::ConvertToJSON(topGeoProj, gROOT->GetClass("ROOT::Experimental::TEveGeoShapeExtract"));
+               j[mngRhoZ->GetProjection()->GetName()] = {nlohmann::json::parse(jsonGeoProj.Data())};
+               }*/
+            
+            // printf("Sending geo json %s\n", j.dump().c_str());
+
             fWindow->Send(connid, j.dump());
-            //sleep(5);
          }
          if (1) {
             
@@ -370,6 +443,7 @@ public:
 
 };
 
+
 REX::TEvePointSet* getPointSet(int npoints = 2, float s=2, int color=4)
 {
    TRandom r(0);
@@ -386,19 +460,6 @@ REX::TEvePointSet* getPointSet(int npoints = 2, float s=2, int color=4)
    return ps;
 }
 
-
-REX::TEveGeoShapeExtract* getShapeExtract(REX::TEveGeoShape* gs)
-{
-      auto ese = new REX::TEveGeoShapeExtract();
-      ese->SetName(gs->GetElementName());
-      ese->SetShape(gs->GetShape());
-      TColor* c = gROOT->GetColor(gs->GetMainColor());
-      float rgba [4] = {c->GetRed(), c->GetGreen(), c->GetBlue(), 1 - float(gs->GetMainTransparency())/100};
-      ese->SetRGBA(rgba);
-      return ese;
-}
-
-
 void makeTestScene()
 {
    // geo
@@ -414,12 +475,15 @@ void makeTestScene()
    b1->SetShape(new TGeoTube(kR_min, kR_max, kZ_d));
    b1->SetMainColor(kCyan);
    b1->SetMainTransparency(80);
+   REX::gEve->GetGlobalScene()->AddElement(b1);
    topGeo->AddElement(getShapeExtract(b1));
 
    auto b2 = new REX::TEveGeoShape("Barell 2");
    b2->SetShape(new TGeoTube(2*kR_min, 2*kR_max, 2*kZ_d));
    b2->SetMainColor(kPink-3);
    b2->SetMainTransparency(80);
+   REX::gEve->GetGlobalScene()->AddElement(b2);
+   printf("global scene %p\n", (void*)REX::gEve->GetGlobalScene());
    topGeo->AddElement(getShapeExtract(b2));
 
    // points
@@ -516,6 +580,8 @@ void makeClientDataFromPointSet(REX::TEvePointSet* hit,  RenderData* rd, std::st
       makeClientDataFromPointSet(projPointSet, rd, projected->GetManager()->GetProjection()->GetName());
    }
 }
+
+
 
 void createStreamableRenderData(REX::TEveElement* el)
 {

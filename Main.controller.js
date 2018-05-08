@@ -96,7 +96,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                     // console.log("OnWebsocketMsg response ", msg);
                     var resp = JSON.parse(msg);
                     if (resp.function === "geometry") {
-                        viewManager.envokeViewFunc( "geometry", resp.args[0]);
+                        console.log("GEO");
+                        viewManager.setGeometry( resp);
                         
                     }
                     else if (resp.function === "event") {

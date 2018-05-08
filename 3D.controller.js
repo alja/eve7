@@ -21,7 +21,8 @@ sap.ui.define([
         // function called from GuiPanelController
         onPanelExit : function() {
         },
-        geometry:function(data) {
+        geometry:function(datax) {
+            var data = datax[0]
             this.viewType = this.getView().data("type");
             var pthis = this;
             var id = this.getView().getId() + "--panelGL";

@@ -19,7 +19,18 @@ class ViewManager {
             c[func](arg);
         }
     }
+    setGeometry(arg)
+    {
+        console.log("view manager geometry ", arg);
+        for (var i = 0; i < this.views.length; ++i)
+        {
+            var controller =  sap.ui.getCore().byId(this.views[i].id).getController();
+            var type = this.views[i].type;
+            console.log("geo ",arg[type] );
+            controller.geometry(arg[type]);
 
+        }
+    }
 
     updateElement(el) {
         console.log("view manger add element ", el);
