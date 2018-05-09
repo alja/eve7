@@ -266,15 +266,18 @@ public:
             nlohmann::json j;
             j["function"] = "geometry";
             j["3D"] = {nlohmann::json::parse(jsonGeo.Data())};
-
+            //    j["RhoPhi"] = {nlohmann::json::parse(jsonGeo.Data())};
+            //   j["RhoZ"] = {nlohmann::json::parse(jsonGeo.Data())};
+            
+            float dz = 10;
             {
                auto fake = new REX::TEveGeoShapeExtract(mngRhoPhi->GetProjection()->GetName());
                
-               TGeoTube* box = new TGeoTube( 250, 250, 1);
+               TGeoTube* box = new TGeoTube( 250, 240, dz);
 
                REX::TEveGeoShape* shape = new REX::TEveGeoShape;
                shape->SetShape(box);
-               shape->SetMainTransparency(20);
+               shape->SetMainTransparency(80);
                fake->AddElement(getShapeExtract(shape));
                
             TString jsonFake = TBufferJSON::ConvertToJSON(fake, gROOT->GetClass("ROOT::Experimental::TEveGeoShapeExtract"));
@@ -283,7 +286,7 @@ public:
 
             { auto fake = new REX::TEveGeoShapeExtract(mngRhoPhi->GetProjection()->GetName());
                
-               TGeoBBox* box = new TGeoBBox( 300, 250, 1);
+               TGeoBBox* box = new TGeoBBox( 300, 250, dz);
                REX::TEveGeoShape* shape = new REX::TEveGeoShape;
                shape->SetShape(box);
                shape->SetMainTransparency(80);
@@ -291,7 +294,7 @@ public:
                
             TString jsonFake = TBufferJSON::ConvertToJSON(fake, gROOT->GetClass("ROOT::Experimental::TEveGeoShapeExtract"));
                j[mngRhoZ->GetProjection()->GetName()] = {nlohmann::json::parse(jsonFake.Data())};
-            }
+               }
               
 
             /*

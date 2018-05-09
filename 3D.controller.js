@@ -30,7 +30,24 @@ sap.ui.define([
 	    JSROOT.draw(id, data, "", function(painter) {
                 console.log('3D painter initialized', painter);
                 pthis.geo_painter = painter;
+
+
                 if (pthis.fast_event) pthis.drawExtra();
+
+                if (pthis.viewType != "3D") {
+
+                    
+                    var a = 451;
+                    painter._camera =  new THREE.OrthographicCamera(-a, a, -a, a, -a, a);
+                    painter._camera.position.x = 0;
+                    painter._camera.position.y = 0;
+                    painter._camera.position.z = a-90;
+                    console.log("camera ",   painter._camera);
+
+             //       painter.options.project = "x";
+             //       painter.options.projectPos = 10; 
+                }
+
                 pthis.geo_painter.Render3D();
 
 	    });
@@ -78,7 +95,7 @@ sap.ui.define([
             
             for (var i=0;i<size;i++) {
                 pnts.AddPoint(rnrData.glBuff[i*3],rnrData.glBuff[i*3+1],rnrData.glBuff[i*3+2]);
-                console.log("add vertex ", rnrData.glBuff[i*3],rnrData.glBuff[i*3+1],rnrData.glBuff[i*3+2]);
+               // console.log("add vertex ", rnrData.glBuff[i*3],rnrData.glBuff[i*3+1],rnrData.glBuff[i*3+2]);
             }
             var mesh = pnts.CreatePoints(JSROOT.Painter.root_colors[rnrData.fMarkerColor] || "rgb(0,0,255)");
 
