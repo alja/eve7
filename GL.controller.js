@@ -36,8 +36,6 @@ sap.ui.define([
             console.log("onInit  id = ", this.getView().getId());
 	    ResizeHandler.register(this.getView(), this.onResize.bind(this));
             this.fast_event = [];
-            DOCUMENT_READY = true;
-            sap.ui.getCore().byId("TopEveId").getController().processWaitingMsg();
 
         },
 

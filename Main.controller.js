@@ -6,6 +6,31 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
 
 		onInit: function () {
 		    console.log("SPLIT CONTROLLER \n");
+
+		       {
+                        var sv =  this.getView().byId("ViewAreaSplitter");
+                        console.log("view Name ", sv);
+		        console.log("SPLIT CONTROLLER == ", sv.getContentAreas());
+                        var ca = sv.getContentAreas();
+                        console.log("primary ",ca[0].data("type"), ca[0] );
+                        viewManager.addView(ca[0].getId(), ca[0].data("type"));
+                    }
+
+                    {
+
+                        var sv =  this.getView().byId("SecondaryView");
+			if (sv) {
+                        var ca = sv.getContentAreas();
+                        for (var i = 0; i < ca.length; ++i) {
+                            console.log("seconary  ",  i ,  ca[i].data("type"), ca[i].getId());
+                            viewManager.addView(ca[i].getId(), ca[i].data("type"));
+
+                        }
+			}
+                    }
+
+                    DOCUMENT_READY = true;
+                    this.processWaitingMsg();
 		},
                 getHandle: function () {
                     return this.handle;
@@ -37,9 +62,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                         
                         el.renderer = obj.renderer;
                         el.geoBuff = fArr;
+                        /*
                         var v =  this.getView().byId("GL");
                         var cont = v.getController();
                         cont.drawExtra(el);                        
+                        */
+                        viewManager.envokeFunction("drawExtra", el);
                         return;
                     }
 
@@ -48,10 +76,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                     // console.log("OnWebsocketMsg response ", msg);
                     var resp = JSON.parse(msg);
                     if (resp.function === "geometry") {
+			/*
                         var ele =  this.getView().byId("GL");
                         if (!ele) return;
                         var cont = ele.getController();
                         cont[resp.function](resp.args[0]);
+                        */
+			viewManager.envokeFunction("geometry", resp.args[0]);
                     }
                     else if (resp.function === "event") {
                         console.log("EVE ", resp);
@@ -72,19 +103,24 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                         // TO DO .... destruct original obj, copy binary render data
 
                         console.log("DEBUG .... new event ", this._event);
-                        
+                        /*
                         var ele =  this.getView().byId("GL");
                         var cont = ele.getController();
                         cont.replaceElement(resp.element);
+			*/
+			viewManager.envokeFunction("replaceElement", resp.element);
                         this.event();
 
                     }
                     else if (resp.function === "endChanges") {
                         this.endChanges = resp.val;
                         if (resp.val) {
-                        var ele =  this.getView().byId("GL");
+			    /*
+                            var ele =  this.getView().byId("GL");
                             var cont = ele.getController();
                             cont.endChanges(resp.val);
+			    */
+			    viewManager.envokeFunction("endChanges", resp.val);
                         }
                     }
                 },
@@ -96,14 +132,18 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                     msgToWait = [];
                 },
                 event: function() {
-                      //  this._event = lst;
-                        {
+                    //  this._event = lst;
+		    /*
+                    {
+			
                         var ele =  this.getView().byId("GL");
                         console.log("ele GL >>>> ", ele);
                         if (!ele) return;
                         var cont = ele.getController();
                             cont["event"]( this._event);
                         }
+		    */
+		    viewManager.envokeFunction("event", this._event);
                         {
                         var ele =  this.getView().byId("Summary");
                        // console.log("ele Sum", ele);
