@@ -27,7 +27,7 @@ sap.ui.define([
 ], function (GuiPanelController, JSONModel, ResizeHandler) {
     "use strict";
 
-    return GuiPanelController.extend("eve.3D", {
+    return GuiPanelController.extend("eve.GL", {
         // function called from GuiPanelController
         onPanelInit : function() {
             console.log("onPanelInit id = ",  this.getView().getId());            
@@ -48,7 +48,7 @@ sap.ui.define([
             var pthis = this;
             var id = this.getView().getId() + "--panelGL";
 	    JSROOT.draw(id, data, "", function(painter) {
-                console.log('3D painter initialized', painter);
+                console.log('GL painter initialized', painter);
                 pthis.geo_painter = painter;
                 if (pthis.fast_event) pthis.drawExtra();
                 pthis.geo_painter.Render3D();
@@ -162,7 +162,7 @@ sap.ui.define([
             
             for (var i = 0; i < c.length; ++i) {
                 if (c[i].geo_object.guid == el.guid) {
-                    console.log("replace 3D");
+                    console.log("replace GL");
                     ec.remove(c[i]);
                 }
             }
