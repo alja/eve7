@@ -379,15 +379,6 @@ void makeTestScene()
       p->SetMomentum(4.82895, 2.35083, -0.611757, 1);
       auto track = new REX::TEveTrack(p, 1, prop);
       track->MakeTrack();
-      track->Print();
-
-      for (int i = 0; i < track->GetN(); ++i)
-      {
-         float x, y, z;
-         track->GetPoint(i, x, y,z);
-         printf("[%d ] %f, %f, %f\n",i,  x, y,z);
-
-      }
       track->SetElementName("TestTrack_1");
       trackHolder->AddElement(track);
    }
@@ -404,7 +395,6 @@ void makeTestScene()
    }
    event->AddElement(trackHolder);
 
-   return; // AMT
    // jets
    auto jetHolder = new REX::TEveElementList("Jets");
    {

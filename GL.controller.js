@@ -137,13 +137,13 @@ sap.ui.define([
             console.log("make track ", track);
             this.geo_painter.getExtrasContainer().add(line);
             return line;
-        },/*
-        makeJet: function(jet) {
+        },
+        makeJet: function(jet, rnrData) {
             //var geo = new EveJetConeGeometry(jet.geoBuff);
             var geo = new THREE.BufferGeometry;
-            geo.addAttribute('position', new THREE.BufferAttribute( jet.geoBuff, 3 ) );
+            geo.addAttribute('position', new THREE.BufferAttribute( rnrData.glBuff, 3 ) );
             {
-                var N = jet.geoBuff.length / 3;
+                var N = rnrData.glBuff.length / 3;
                 var idcs = [];
                 idcs.push( N - 1 );  idcs.push( 0 );  idcs.push( 1 );
                 for (var i = 1; i < N - 1; ++i)
@@ -160,7 +160,7 @@ sap.ui.define([
             jet_ro.visible = jet.fRnrSelf;
             return jet_ro;
         },
-*/
+
         replaceElement:function(oldEl, newEl) {
             // console.log("GL controller replace element  OLD", oldEl,  oldEl.fRnrSelf);
             // console.log("GL controller replace element  NEW",  newEl, newEl.fRnrSelf);
