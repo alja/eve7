@@ -31,13 +31,15 @@
 #include <ROOT/TEveScene.hxx>
 #include <ROOT/TEveElement.hxx>
 #include <ROOT/TEveManager.hxx>
+#include <ROOT/TEveProjectionManager.hxx>
+#include <ROOT/TEveProjectionBases.hxx>
 #include <ROOT/TEvePointSet.hxx>
 #include <ROOT/TEveJetCone.hxx>
 
 #include <ROOT/TEveTrack.hxx>
 #include <ROOT/TEveTrackPropagator.hxx>
 
-#include "json.hpp"
+#include <ROOT/json.hxx>
 
 namespace REX = ROOT::Experimental;
 
@@ -46,7 +48,10 @@ using RenderData = REX::RenderData;
 // globals
 REX::TEveGeoShapeExtract* topGeo = 0;
 REX::TEveManager* eveMng = 0;
-
+/*
+REX::TEveProjectionManager* mngRhoPhi = 0;
+REX::TEveProjectionManager* mngRhoZ = 0;
+*/
 struct Conn
 {
    unsigned fId;
@@ -54,17 +59,6 @@ struct Conn
    Conn() : fId(0) {}
    Conn(unsigned int cId) : fId(cId) {}
 };
-
-void streamSingleEveElement(REX::TEveElement* el,nlohmann::json& jsonParent )
-{
-   TString flatJS = TBufferJSON::ConvertToJSON(el, el->IsA());
-   nlohmann::json cj =  nlohmann::json::parse(flatJS.Data());
-   cj["guid"] = el->GetElementId();
-   cj["fRnrSelf"] = el->GetRnrSelf();
-   cj["fRnrChildren"] = el->GetRnrChildren();
-   jsonParent["element"] = cj;
-}
-
 
 class WHandler
 {
@@ -80,13 +74,14 @@ public:
 
    void streamEveElement(REX::TEveElement* el,nlohmann::json& jsonParent )
    {
-      // printf("BEGIN stream element %s \n", el->GetElementName() );
+      printf("BEGIN stream element %s \n", el->GetElementName() );
+
+      nlohmann::json cj;
+      el->SetCoreJson(cj);
+
       
-      TString flatJS = TBufferJSON::ConvertToJSON(el, el->IsA());  
-      nlohmann::json cj =  nlohmann::json::parse(flatJS.Data());
-      cj["guid"] = el->GetElementId();
-      cj["fRnrSelf"] = el->GetRnrSelf();
-      cj["fRnrChildren"] = el->GetRnrChildren();
+      el->BuildRenderData(); // unrelated temporary here
+      
       jsonParent["arr"].push_back(cj);
 
       int loci = jsonParent["arr"].size() -1;
@@ -102,42 +97,79 @@ public:
 
    void sendRenderData(REX::TEveElement* el, unsigned connid)
    {
-      // printf("send renderdata  %s\n", el->GetElementName());
-      if (el->GetUserData())
-      {
-         void* ud = el->GetUserData();
-         //RenderData* r = dynamic_cast<RenderData*> (ud);
-         RenderData* r = ( RenderData*)(el->GetUserData());
-         if (!r) {
-            // printf("no render data\n");
-            return;
+      if (el->GetUserData()) {
+
+         printf("send render data %s\n", el->GetElementName());
+         
+         nlohmann::json topRnrHeader;
+         topRnrHeader["guid"] = el->GetElementId();         
+         topRnrHeader["hsArr"] = nlohmann::json::array();
+         topRnrHeader["bsArr"] = nlohmann::json::array();
+         
+         std::vector<REX::RenderData*> reps;
+         REX::RenderData* rd3D = (REX::RenderData*)(el->GetUserData());
+         rd3D->fHeader["viewType"] = "3D";
+         reps.push_back(rd3D);
+
+         // AMT presume object has a user data is also prectab;e
+         REX::TEveProjectable* projectable = dynamic_cast<REX::TEveProjectable*>(el);
+         if (projectable && projectable->HasProjecteds()){
+            printf("collect prjected begin >>>>>>>> \n");
+            int y = 0;
+            for (auto pit = projectable->BeginProjecteds(); pit != projectable->EndProjecteds(); ++pit)
+            {
+               printf("collect projected loop %d \n", y++);
+               REX::TEveProjected* ep = *pit;
+               REX::RenderData* rdp = (REX::RenderData*)(((REX::TEveElement*)ep)->GetUserData());
+               rdp->fHeader["viewType"] = ep->GetManager()->GetProjection()->GetName();
+               reps.push_back(rdp);
+            }
+            printf("end collecting view types\n");
+         }
+         
+         
+         size_t totalSizeViewTypes =0;
+         for (auto it=reps.begin(); it != reps.end(); ++it)
+         {
+            REX::RenderData* rd = *it;
+            topRnrHeader["hsArr"].push_back(rd->getHeaderSize());
+            size_t ts = rd->getTotalSize();
+            topRnrHeader["bsArr"].push_back(ts);
+            totalSizeViewTypes += ts;
+         }
+         printf("total size viewType %d\n", (int)totalSizeViewTypes);
+
+         std::string topRnrHeaderFlat = topRnrHeader.dump();
+         size_t thsRound = 4* int(ceil(topRnrHeaderFlat.size()/4.0));
+         size_t pkgSize = sizeof(int) + thsRound + totalSizeViewTypes;
+         char* pkgBuff = (char*)malloc(pkgSize);
+
+         int off = 0;
+         
+         // first write size of top header
+         int ts = topRnrHeaderFlat.size();
+         memcpy(pkgBuff, &ts, sizeof(int));
+         off += sizeof(int);
+
+         // write top header
+         memcpy(pkgBuff+off, topRnrHeaderFlat.c_str(), topRnrHeaderFlat.size());
+         off += thsRound;
+         for (auto it=reps.begin(); it != reps.end(); ++it){
+            REX::RenderData* rd = *it;
+            int bw = rd->write(pkgBuff+off);
+            //rd->dump();
+            off += bw; 
          }
 
-         nlohmann::json header;
-         header["function"] = "addElementRenderData";
-         header["guid"]     = el->GetElementId();
-         header["renderer"] = r->fRnrFunction.Data();
+         printf("total %d off %d\n", (int)pkgSize, off);
 
-         std::string flatHead = header.dump();
-         int hs = int(flatHead.size());
-         int vs = int(r->fGlVertexBuffer.size());
+         fWindow->SendBinary(connid, pkgBuff, pkgSize);
 
-         // offset must be a factor of 4
-         float ff = (hs+1.0)/4.0;
-         
-         int headOff = ceil(ff)*4;
-         // printf("ceil of %d to %d \n", hs+1, headOff);
-
-         uint totalSize = headOff + vs * sizeof(float);
-         uint8_t arr[totalSize];
-         arr[0]=hs; // write precise size
-         memcpy(&arr[1], flatHead.c_str(), hs);
-         memcpy(&arr[headOff], &r->fGlVertexBuffer[0], vs * sizeof(float));
-            
-         fWindow->SendBinary(connid, &arr[0], totalSize);
-
+         printf("send binary end\n");
       }
-      for (auto it =  el->BeginChildren(); it != el->EndChildren(); ++it)
+
+      printf("send rnr data loop children \n");
+      for (auto it = el->BeginChildren(); it != el->EndChildren(); ++it)
          sendRenderData(*it, connid);
    }
 
@@ -173,7 +205,7 @@ public:
             eventScene["arr"] = nlohmann::json::array();
             streamEveElement(eveMng->GetEventScene(), eventScene);
             
-            // printf("send scene %s \n", eventScene.dump().c_str());
+            printf("send scene %s \n", eventScene.dump().c_str());
             jTop["args"] = eventScene["arr"];
             fWindow->Send(connid,jTop.dump());
             // render info
@@ -220,7 +252,7 @@ public:
       
          nlohmann::json resp;
          resp["function"] = "replaceElement";
-         streamSingleEveElement(el, resp);
+         el->SetCoreJson(resp);
          for (auto i = fConnList.begin(); i != fConnList.end(); ++i)
          {
             fWindow->Send(i->fId, resp.dump());
@@ -271,35 +303,17 @@ public:
 REX::TEvePointSet* getPointSet(int npoints = 2, float s=2, int color=4)
 {
    TRandom r(0);
-   REX::TEvePointSet* ps = new REX::TEvePointSet("fu");
-   RenderData* rnrData = new RenderData("makeHit");
+   REX::TEvePointSet* ps = new REX::TEvePointSet("fu", npoints);
+
    for (Int_t i=0; i<npoints; ++i)
-   {
-      for (int k = 0; k<3; ++k)
-         rnrData->push(r.Uniform(-s,s));
-   }
-   ps->SetUserData(rnrData);
+         ps->SetNextPoint(r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s));
    
    ps->SetMarkerColor(color);
    ps->SetMarkerSize(r.Uniform(1, 2));
    ps->SetMarkerStyle(4);
-
    return ps;
 }
 
-void makeTrack(REX::TEveTrack* track)
-{
-   track->MakeTrack();
-   float* arr = track->GetP();
-   RenderData* rnrData = new RenderData("makeTrack");
-   for (Int_t i=0; i<track->GetN(); ++i) {
-      rnrData->push(arr[3*i]);
-      rnrData->push(arr[3*i+1]);
-      rnrData->push(arr[3*i+2]);
-   }
-   track->Reset();
-   track->SetUserData(rnrData);
-}
 
 REX::TEveGeoShapeExtract* getShapeExtract(REX::TEveGeoShape* gs)
 {
@@ -336,11 +350,12 @@ void makeTestScene()
    b2->SetMainTransparency(80);
    topGeo->AddElement(getShapeExtract(b2));
 
+   REX::TEveElement* event = eveMng->GetEventScene();
    // points
    //
-   REX::TEveElement* pntHolder = new REX::TEveElementList("Hits");
+  
    
-   REX::TEveElement* event = eveMng->GetEventScene();
+   REX::TEveElement* pntHolder = new REX::TEveElementList("Hits");
    auto ps1 = getPointSet(20, 100, 3);
    ps1->SetElementName("Points_1");
    pntHolder->AddElement(ps1);
@@ -350,7 +365,7 @@ void makeTestScene()
    pntHolder->AddElement(ps2);
 
    event->AddElement(pntHolder);
-   
+
    // tracks
    //
    auto prop = new REX::TEveTrackPropagator();
@@ -363,30 +378,39 @@ void makeTestScene()
       p->SetProductionVertex(0.068, 0.2401, -0.07629, 1);
       p->SetMomentum(4.82895, 2.35083, -0.611757, 1);
       auto track = new REX::TEveTrack(p, 1, prop);
-      makeTrack(track);
+      track->MakeTrack();
+      track->Print();
+
+      for (int i = 0; i < track->GetN(); ++i)
+      {
+         float x, y, z;
+         track->GetPoint(i, x, y,z);
+         printf("[%d ] %f, %f, %f\n",i,  x, y,z);
+
+      }
       track->SetElementName("TestTrack_1");
       trackHolder->AddElement(track);
    }
 
-   {
+   if (1) {
       TParticle* p = new TParticle(); p->SetPdgCode(11);
       p->SetProductionVertex(0.068, 0.2401, -0.07629, 1);
        p->SetMomentum(-0.82895, 0.83, -1.1757, 1);
       auto track = new REX::TEveTrack(p, 1, prop);
-      makeTrack(track);
+      track->MakeTrack();
       track->SetMainColor(kBlue);
       track->SetElementName("TestTrack_2");
       trackHolder->AddElement(track);
    }
    event->AddElement(trackHolder);
 
+   return; // AMT
    // jets
    auto jetHolder = new REX::TEveElementList("Jets");
    {
       auto jet = new REX::TEveJetCone("Jet_1");
       jet->SetCylinder(2*kR_max, 2*kZ_d);
       jet->AddEllipticCone(0.7, 1, 0.1, 0.3);
-      jet->CalculatePoints();
 
       jetHolder->AddElement(jet);
    }
@@ -401,6 +425,18 @@ void splitContainer(bool printSShFw = false)
    gSystem->Load("libROOTEve");
    eveMng = REX::TEveManager::Create();
    makeTestScene();
+   /*
+   // project geometry and event scene
+   mngRhoPhi = new REX::TEveProjectionManager(REX::TEveProjection::kPT_RPhi);      
+   mngRhoPhi->ImportElements(REX::gEve->GetGlobalScene());    
+   mngRhoPhi->ImportElements(REX::gEve->GetEventScene());
+
+   
+   // project geometry and event scene
+   mngRhoZ = new REX::TEveProjectionManager(REX::TEveProjection::kPT_RhoZ); 
+   mngRhoZ->ImportElements(REX::gEve->GetGlobalScene());
+   mngRhoZ->ImportElements(REX::gEve->GetEventScene());
+   */
    handler = new WHandler();
    handler->makeWebWindow("", printSShFw);
 }

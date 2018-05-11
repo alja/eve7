@@ -45,6 +45,7 @@ sap.ui.define([
         geometry:function(data) {
             var pthis = this;
             var id = this.getView().getId() + "--panelGL";
+            this.viewType = this.getView().data("type");
 	    JSROOT.draw(id, data, "", function(painter) {
                 console.log('GL painter initialized', painter);
                 pthis.geo_painter = painter;
@@ -64,7 +65,6 @@ sap.ui.define([
             this.needRedraw = true;
         },
         drawExtra : function(el) {
-           // console.log("drawExtra ");
             if (!this.geo_painter) {
                 // no painter - no draw of event
                 this.fast_event.push(el);
@@ -75,7 +75,10 @@ sap.ui.define([
                 var len = this.fast_event.length;
                 for(var i = 0; i < len;  i++){
                     var  x = this.fast_event.pop();
-                    this[x.renderer](x);                    
+                    console.log("draw extra ", x, this.viewType);
+                    var rnrData = x[this.viewType];
+                    console.log("calling rendere ",rnrData.rnrFunc, rnrData );
+                    this[rnrData.rnrFunc](x, rnrData);                    
                 }
                 if (el) {this[x.renderer](x);}
                 if (this.needRedraw) {
@@ -87,15 +90,17 @@ sap.ui.define([
                 return true;
             }
         },
-        makeHit: function(hit) {
-           // console.log("drawHit ", hit);
-            var hit_size = 8*hit.fMarkerSize,
-                size = hit.geoBuff.length/3,
+        makeHit: function(hit, rnrData) {
+            console.log("drawHit ", hit, "this type ", this.viewType);
+            var hit_size = 8*rnrData.fMarkerSize,
+                size = rnrData.glBuff.length/3,
                 pnts = new JSROOT.Painter.PointsCreator(size, true, hit_size);
             
-            for (var i=0;i<size;i++)
-                pnts.AddPoint(hit.geoBuff[i*3],hit.geoBuff[i*3+1],hit.geoBuff[i*3+2]);
-            var mesh = pnts.CreatePoints(JSROOT.Painter.root_colors[hit.fMarkerColor] || "rgb(0,0,255)");
+            for (var i=0;i<size;i++) {
+                pnts.AddPoint(rnrData.glBuff[i*3],rnrData.glBuff[i*3+1],rnrData.glBuff[i*3+2]);
+               // console.log("add vertex ", rnrData.glBuff[i*3],rnrData.glBuff[i*3+1],rnrData.glBuff[i*3+2]);
+            }
+            var mesh = pnts.CreatePoints(JSROOT.Painter.root_colors[rnrData.fMarkerColor] || "rgb(0,0,255)");
 
             mesh.highlightMarkerSize = hit_size*3;
             mesh.normalMarkerSize = hit_size;
@@ -103,23 +108,23 @@ sap.ui.define([
             mesh.geo_name = hit.fName;
             mesh.geo_object = hit;
 
-            this.geo_painter.getExtrasContainer().add(mesh);
             mesh.visible = hit.fRnrSelf;
+            this.geo_painter.getExtrasContainer().add(mesh);
             return mesh;
         },
-        makeTrack: function(track) {            
-            var N = track.geoBuff.length/3;
+        makeTrack: function(track, rnrData) {            
+            var N = rnrData.glBuff.length/3;
             var track_width = track.fLineWidth || 1,
                 track_color = JSROOT.Painter.root_colors[track.fLineColor] || "rgb(255,0,255)";
 
             var buf = new Float32Array(N*3*2), pos = 0;
             for (var k=0;k<(N-1);++k) {
-                buf[pos]   = track.geoBuff[k*3];
-                buf[pos+1] = track.geoBuff[k*3+1];
-                buf[pos+2] = track.geoBuff[k*3+2];
-                buf[pos+3] = track.geoBuff[k*3+3];
-                buf[pos+4] = track.geoBuff[k*3+4];
-                buf[pos+5] = track.geoBuff[k*3+5];
+                buf[pos]   = rnrData.glBuff[k*3];
+                buf[pos+1] = rnrData.glBuff[k*3+1];
+                buf[pos+2] = rnrData.glBuff[k*3+2];
+                buf[pos+3] = rnrData.glBuff[k*3+3];
+                buf[pos+4] = rnrData.glBuff[k*3+4];
+                buf[pos+5] = rnrData.glBuff[k*3+5];
                 // console.log(" vertex ", buf[pos],buf[pos+1], buf[pos+2],buf[pos+3], buf[pos+4],  buf[pos+5]);
                 pos+=6;
             }
@@ -128,10 +133,11 @@ sap.ui.define([
 
             line.geo_name = track.fName;
             line.geo_object = track;
-            this.geo_painter.getExtrasContainer().add(line);
             line.visible = track.fRnrSelf;
+            console.log("make track ", track);
+            this.geo_painter.getExtrasContainer().add(line);
             return line;
-        },
+        },/*
         makeJet: function(jet) {
             //var geo = new EveJetConeGeometry(jet.geoBuff);
             var geo = new THREE.BufferGeometry;
@@ -154,18 +160,25 @@ sap.ui.define([
             jet_ro.visible = jet.fRnrSelf;
             return jet_ro;
         },
-        replaceElement:function(el) {
+*/
+        replaceElement:function(oldEl, newEl) {
+            // console.log("GL controller replace element  OLD", oldEl,  oldEl.fRnrSelf);
+            // console.log("GL controller replace element  NEW",  newEl, newEl.fRnrSelf);
+
             var ec = this.geo_painter.getExtrasContainer();
             var c = ec.children;
-            
+            var rnrData;
             for (var i = 0; i < c.length; ++i) {
-                if (c[i].geo_object.guid == el.guid) {
-                    console.log("replace GL");
-                    ec.remove(c[i]);
+                if (c[i].geo_object.guid == newEl.guid)
+                {
+                    c[i].geo_object.fRnrSelf = newEl.fRnrSelf;
+                    c[i].visible = newEl.fRnrSelf;
+                    //this.geo_painter.Render3D();
+                    console.log("------------- rnrstate ", c[i].visible );
+                    this.geo_painter._renderer.render(this.geo_painter._scene, this.geo_painter._camera);
+                    break;
                 }
             }
-            this[el.renderer](el);             
-            this.geo_painter.Render3D();
         },
 	onResize: function(event) {
             // use timeout

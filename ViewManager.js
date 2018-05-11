@@ -11,7 +11,33 @@ class ViewManager {
     }
 
 
-    envokeFunction(func, arg) {
+    addElementRnrInfo(el) {
+        console.log("view manger add element ", el);
+        for (var i = 0; i < this.views.length; ++i)
+        {
+            var vi = this.views[i];
+            var controller =  sap.ui.getCore().byId(vi.id).getController();
+            /*
+            var rnrInfo = el[vi.type];
+            var func = rnrInfo.rnrFunc;
+            var arg =  rnrInfo.glBuff;
+*/
+            controller.drawExtra(el);
+            
+        }
+    }
+
+    replace(oldEl, newEl) {
+        console.log("viewManager old ", oldEl);
+        console.log("viewManager new",  newEl);
+        for (var i = 0; i < this.views.length; ++i)
+        {
+            var c = sap.ui.getCore().byId(this.views[i].id).getController();
+            c.replaceElement(oldEl, newEl);
+        }
+    }
+
+    envokeViewFunc(func, arg) {
         console.log("viewmanager envoke func ", func, arg);
         
         for (var i = 0; i < this.views.length; ++i)

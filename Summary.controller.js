@@ -123,17 +123,17 @@ sap.ui.define([
         },
         event: function(lst) {
             this._event = lst;
-            console.log("summary event lst \n", lst);
+            // console.log("summary event lst \n", lst);
             
             var oTreeData = {fName: "unset"}
 
             oTreeData.arr = [];
            this.addNodesToTreeItemModel(lst, oTreeData);
-            console.log("event model ", { "top" : oTreeData});
+            // console.log("event model ", { "top" : oTreeData});
 
             this.model.setData({ "fName" : "Top", "arr" : oTreeData }); // ??? is this necessary
 
-            console.log("tree ", this.tree.getItems());
+            // console.log("tree ", this.tree.getItems());
             this.model.refresh(true);
             this.tree.expandToLevel(3);
 	    sap.ui.getCore().setModel(this.model, "myModelName");

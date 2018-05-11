@@ -40,35 +40,55 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                     
                     if (typeof msg != "string") {
                         
-                        
                         console.log('TestPanel ArrayBuffer size ' +  msg.byteLength);
-                        var sizeArr = new Int8Array(msg, 0, 1);
-                        var textSize = sizeArr[0];
-                        console.log("textsize ", textSize);
-                        var arr = new Int8Array(msg, 1, textSize);
+                        var textSize = 11;
+                        {
+                        var sizeArr = new Int32Array(msg, 0, 4);
+                            textSize = sizeArr[0];
+                            
+                            console.log("textsize 4", textSize);
+                        }
+                        
+                        var arr = new Int8Array(msg, 4, textSize);
                         var str = String.fromCharCode.apply(String, arr);
-                        console.log("str = ", str);
+                        console.log("core header = ", str);
                         
-                        var obj = JSON.parse(str);
-                        console.log("---------------------------- renderer comming ", obj);
-                        // TODO string to JSON !!!
-                        var headerOff = 4*Math.ceil((1+textSize)/4.0);  
 
-                        var fArr = new Float32Array(msg, headerOff);
+                        var off = 4+ textSize;
+                        var renderData = JSON.parse(str);
 
-                        var el = this.findElementWithId(obj.guid, this._event);
+                        off = 4 * Math.ceil(off/4.0);
 
-                        console.log("find element ", el);
+                        var vtArr = [];
+                        var el = this.findElementWithId(renderData.guid, this._event);
+                        console.log("element bin msg ", el);
+                        for (var i = 0; i < renderData["hsArr"].length; ++i)
+                        {
+                            var vha = new Int8Array(msg, off,renderData["hsArr"][i]);
+                            str = String.fromCharCode.apply(String, vha);
+                            var headOff =  4*Math.ceil(renderData["hsArr"][i]/4.0);
+                            off += headOff;
+                            console.log("arr off ", off);
+                            var totalSizeVT = renderData["bsArr"][i];
+                            var arrSize = totalSizeVT - headOff;
+                            var fArr = new Float32Array(msg, off, arrSize/4);
+                            off+=renderData["bsArr"][i];
+                            console.log("farr ", fArr);
+
+                            
+                            var vo = JSON.parse(str);
+                            vo["glBuff"] = fArr;
+                            el[vo.viewType] = vo;
+                            // vtArr.push({"header": vo, "glBuff": fArr, "type":vo.viewType})
+
+                            viewManager.addElementRnrInfo(el);
+                        }
+
+                        console.log("element with rendering info ", el);
+                       
                         
-                        el.renderer = obj.renderer;
-                        el.geoBuff = fArr;
-                        /*
-                        var v =  this.getView().byId("GL");
-                        var cont = v.getController();
-                        cont.drawExtra(el);                        
-                        */
-                        viewManager.envokeFunction("drawExtra", el);
                         return;
+                        
                     }
 
 
@@ -82,7 +102,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                         var cont = ele.getController();
                         cont[resp.function](resp.args[0]);
                         */
-			viewManager.envokeFunction("geometry", resp.args[0]);
+			viewManager.envokeViewFunc("geometry", resp.args[0]);
                     }
                     else if (resp.function === "event") {
                         console.log("EVE ", resp);
@@ -90,26 +110,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                         this.event();
                     }
                     else if (resp.function === "replaceElement") {
-                        console.log("replace element ", resp);
-                        // find the element with guid in the event ... currently one level
 
-                        var obj = this.findElementWithId(resp.element.guid, this._event);
+                        var oldEl = this.findElementWithId(resp.guid, this._event);
+                        var newEl = resp;
+                        viewManager.replace(oldEl, newEl);
 
-                         console.log("DEBUG .... got a reference to OLD  ", obj.parent);
-                         resp.element.renderer = obj.renderer;
-                         resp.element.geoBuff = obj.geoBuff;
-                        
-
-                        // TO DO .... destruct original obj, copy binary render data
-
-                        console.log("DEBUG .... new event ", this._event);
-                        /*
-                        var ele =  this.getView().byId("GL");
-                        var cont = ele.getController();
-                        cont.replaceElement(resp.element);
-			*/
-			viewManager.envokeFunction("replaceElement", resp.element);
-                        this.event();
+                        this.event(); 
 
                     }
                     else if (resp.function === "endChanges") {
@@ -120,7 +126,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                             var cont = ele.getController();
                             cont.endChanges(resp.val);
 			    */
-			    viewManager.envokeFunction("endChanges", resp.val);
+			    viewManager.envokeViewFunc("endChanges", resp.val);
                         }
                     }
                 },
@@ -143,7 +149,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                             cont["event"]( this._event);
                         }
 		    */
-		    viewManager.envokeFunction("event", this._event);
+		    viewManager.envokeViewFunc("event", this._event);
                         {
                         var ele =  this.getView().byId("Summary");
                        // console.log("ele Sum", ele);
