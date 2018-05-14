@@ -75,10 +75,10 @@ sap.ui.define([
                 var len = this.fast_event.length;
                 for(var i = 0; i < len;  i++){
                     var  x = this.fast_event.pop();
-                    console.log("draw extra ", x, this.viewType);
+                    // console.log("draw extra ", x, this.viewType);
                     var rnrData = x[this.viewType];
                     if (rnrData) {
-                    console.log("calling rendere ",rnrData.rnrFunc, rnrData );
+                        // console.log("calling rendere ",rnrData.rnrFunc, rnrData );
                         this[rnrData.rnrFunc](x, rnrData);
                     }
                 }

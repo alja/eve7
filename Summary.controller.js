@@ -205,8 +205,8 @@ sap.ui.define([
         },
         gedFactory:function(sId, oContext)
         {
-            console.log("factory ", oContext.oModel.oData[oContext.getPath()]);
-            console.log("factory id ",sId);
+            // console.log("factory ", oContext.oModel.oData[oContext.getPath()]);
+            // console.log("factory id ",sId);
             var base = "/widgetlist/";
             var path = oContext.getPath();
             var idx = path.substring(base.length);
@@ -251,9 +251,9 @@ sap.ui.define([
             return HL;
         },
         sendMethodInvocationRequest: function(value, event) {
-	    console.log("on change !!!!!!", event.getSource().data("myData"));
+	    // console.log("on change !!!!!!", event.getSource().data("myData"));
             var mir =  event.getSource().data("myData").srv + "( " + value + " )";
-            console.log("=====> ", mir);
+            // console.log("=====> ", mir);
             var obj = {"mir" : mir, "guid" : this.editorElement.guid, "class" : this.editorElement._typename};
 
             sap.ui.getCore().byId("TopEveId").getController().getHandle().Send(JSON.stringify(obj)); 
@@ -268,13 +268,12 @@ sap.ui.define([
 	printEvent: function(event)
         {  
             var propertyPath = event.getSource().getBinding("value").getPath();
-            console.log("property path ", propertyPath);
+            // console.log("property path ", propertyPath);
             var bindingContext = event.getSource().getBindingContext("event");
 
             var path =  bindingContext.getPath(propertyPath);
             var object =  bindingContext.getObject(propertyPath);
-            console.log("obj ",object );
-            // alert("You have change : "+ path + " = " + object + " element " + JSON.stringify(this.editorElement));
+            // console.log("obj ",object );
 
             this.changeNumPoints();
         },
