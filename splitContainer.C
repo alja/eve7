@@ -48,10 +48,10 @@ using RenderData = REX::RenderData;
 // globals
 REX::TEveGeoShapeExtract* topGeo = 0;
 REX::TEveManager* eveMng = 0;
-/*
+
 REX::TEveProjectionManager* mngRhoPhi = 0;
 REX::TEveProjectionManager* mngRhoZ = 0;
-*/
+
 struct Conn
 {
    unsigned fId;
@@ -118,11 +118,22 @@ public:
             int y = 0;
             for (auto pit = projectable->BeginProjecteds(); pit != projectable->EndProjecteds(); ++pit)
             {
-               printf("collect projected loop %d \n", y++);
+
                REX::TEveProjected* ep = *pit;
-               REX::RenderData* rdp = (REX::RenderData*)(((REX::TEveElement*)ep)->GetUserData());
-               rdp->fHeader["viewType"] = ep->GetManager()->GetProjection()->GetName();
-               reps.push_back(rdp);
+               printf("collect projected loop %d %s \n", y++, ep->GetManager()->GetProjection()->GetName());
+               REX::TEveElement* pEl = dynamic_cast<REX::TEveElement*>(ep);
+               if (pEl) {
+                  // AMT this should be handled with import
+                  pEl->BuildRenderData();
+                  printf("projected %s %p\n", pEl->GetElementName(), pEl->GetUserData());
+                  
+                  REX::RenderData* rdp = ( REX::RenderData*)(pEl->GetUserData());
+
+                  rdp->fHeader["viewType"] = ep->GetManager()->GetProjection()->GetName();
+                  printf("set header %s\n", rdp->fHeader.dump().c_str());
+                  // rdp->dump();
+                  reps.push_back(rdp);
+               }
             }
             printf("end collecting view types\n");
          }
@@ -366,6 +377,7 @@ void makeTestScene()
 
    event->AddElement(pntHolder);
 
+
    // tracks
    //
    auto prop = new REX::TEveTrackPropagator();
@@ -395,6 +407,7 @@ void makeTestScene()
    }
    event->AddElement(trackHolder);
 
+   /*
    // jets
    auto jetHolder = new REX::TEveElementList("Jets");
    {
@@ -405,6 +418,7 @@ void makeTestScene()
       jetHolder->AddElement(jet);
    }
    event->AddElement(jetHolder);
+   */
 }
 
 
@@ -415,7 +429,7 @@ void splitContainer(bool printSShFw = false)
    gSystem->Load("libROOTEve");
    eveMng = REX::TEveManager::Create();
    makeTestScene();
-   /*
+   
    // project geometry and event scene
    mngRhoPhi = new REX::TEveProjectionManager(REX::TEveProjection::kPT_RPhi);      
    mngRhoPhi->ImportElements(REX::gEve->GetGlobalScene());    
@@ -426,7 +440,7 @@ void splitContainer(bool printSShFw = false)
    mngRhoZ = new REX::TEveProjectionManager(REX::TEveProjection::kPT_RhoZ); 
    mngRhoZ->ImportElements(REX::gEve->GetGlobalScene());
    mngRhoZ->ImportElements(REX::gEve->GetEventScene());
-   */
+   
    handler = new WHandler();
    handler->makeWebWindow("", printSShFw);
 }

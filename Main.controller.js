@@ -61,26 +61,28 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
 
                         var vtArr = [];
                         var el = this.findElementWithId(renderData.guid, this._event);
-                        console.log("element bin msg ", el);
+
                         for (var i = 0; i < renderData["hsArr"].length; ++i)
                         {
+                            console.log(">>>>>>>> LOOP view type ", i, off);
                             var vha = new Int8Array(msg, off,renderData["hsArr"][i]);
                             str = String.fromCharCode.apply(String, vha);
+                            console.log("header ", str);
+                            var vo = JSON.parse(str);
+                            
                             var headOff =  4*Math.ceil(renderData["hsArr"][i]/4.0);
                             off += headOff;
-                            console.log("arr off ", off);
                             var totalSizeVT = renderData["bsArr"][i];
                             var arrSize = totalSizeVT - headOff;
+                            console.log("array size off", arrSize, off);
                             var fArr = new Float32Array(msg, off, arrSize/4);
-                            off+=renderData["bsArr"][i];
-                            console.log("farr ", fArr);
-
+                            off+=arrSize;
+                            console.log("arr off ", fArr, off);
                             
-                            var vo = JSON.parse(str);
                             vo["glBuff"] = fArr;
                             el[vo.viewType] = vo;
-                            // vtArr.push({"header": vo, "glBuff": fArr, "type":vo.viewType})
 
+                            console.log("add render info ", el);
                             viewManager.addElementRnrInfo(el);
                         }
 
