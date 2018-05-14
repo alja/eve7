@@ -77,8 +77,10 @@ sap.ui.define([
                     var  x = this.fast_event.pop();
                     console.log("draw extra ", x, this.viewType);
                     var rnrData = x[this.viewType];
+                    if (rnrData) {
                     console.log("calling rendere ",rnrData.rnrFunc, rnrData );
-                    this[rnrData.rnrFunc](x, rnrData);                    
+                        this[rnrData.rnrFunc](x, rnrData);
+                    }
                 }
                 if (el) {this[x.renderer](x);}
                 if (this.needRedraw) {
@@ -139,6 +141,7 @@ sap.ui.define([
             return line;
         },
         makeJet: function(jet, rnrData) {
+            console.log("make jet ", jet);
             //var geo = new EveJetConeGeometry(jet.geoBuff);
             var geo = new THREE.BufferGeometry;
             geo.addAttribute('position', new THREE.BufferAttribute( rnrData.glBuff, 3 ) );

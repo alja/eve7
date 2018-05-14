@@ -120,11 +120,12 @@ public:
             {
 
                REX::TEveProjected* ep = *pit;
-               printf("collect projected loop %d %s \n", y++, ep->GetManager()->GetProjection()->GetName());
                REX::TEveElement* pEl = dynamic_cast<REX::TEveElement*>(ep);
                if (pEl) {
+               printf("collect projected loop %d %s \n", y++, ep->GetManager()->GetProjection()->GetName());
                   // AMT this should be handled with import
                   pEl->BuildRenderData();
+                  if (pEl->GetUserData()) {
                   printf("projected %s %p\n", pEl->GetElementName(), pEl->GetUserData());
                   
                   REX::RenderData* rdp = ( REX::RenderData*)(pEl->GetUserData());
@@ -133,6 +134,7 @@ public:
                   printf("set header %s\n", rdp->fHeader.dump().c_str());
                   // rdp->dump();
                   reps.push_back(rdp);
+                  }
                }
             }
             printf("end collecting view types\n");
@@ -407,7 +409,7 @@ void makeTestScene()
    }
    event->AddElement(trackHolder);
 
-   /*
+   
    // jets
    auto jetHolder = new REX::TEveElementList("Jets");
    {
@@ -418,7 +420,7 @@ void makeTestScene()
       jetHolder->AddElement(jet);
    }
    event->AddElement(jetHolder);
-   */
+
 }
 
 

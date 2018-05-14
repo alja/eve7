@@ -57,6 +57,14 @@ sap.ui.define([
                             _type   : "Number"
 			}
 	            ],
+	            "ROOT::Experimental::TEveJetCone" : [
+		        {
+			    name : "RnrSelf",
+			    srv : "SetRnrSelf",
+			    member : "fRnrSelf",
+                            _type   : "Bool"
+			}
+	            ],
 	            "ROOT::Experimental::TEveTrack" : [
 		        {
 			    name : "RnrSelf",
