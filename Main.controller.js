@@ -74,9 +74,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
                                   vo["glBuff"] = fArr;
                                   el[vo.viewType] = vo;
                                   // console.log("add render info ", el);
-                                  viewManager.addElementRnrInfo(el);
                               }
 
+                                  viewManager.addElementRnrInfo(el);
                               // console.log("element with rendering info ", el);
                               
                               

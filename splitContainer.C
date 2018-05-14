@@ -122,18 +122,18 @@ public:
                REX::TEveProjected* ep = *pit;
                REX::TEveElement* pEl = dynamic_cast<REX::TEveElement*>(ep);
                if (pEl) {
-               printf("collect projected loop %d %s \n", y++, ep->GetManager()->GetProjection()->GetName());
+                  printf("collect projected loop %d %s \n", y++, ep->GetManager()->GetProjection()->GetName());
                   // AMT this should be handled with import
                   pEl->BuildRenderData();
                   if (pEl->GetUserData()) {
-                  printf("projected %s %p\n", pEl->GetElementName(), pEl->GetUserData());
+                     printf("projected %s %p\n", pEl->GetElementName(), pEl->GetUserData());
                   
-                  REX::RenderData* rdp = ( REX::RenderData*)(pEl->GetUserData());
+                     REX::RenderData* rdp = ( REX::RenderData*)(pEl->GetUserData());
 
-                  rdp->fHeader["viewType"] = ep->GetManager()->GetProjection()->GetName();
-                  printf("set header %s\n", rdp->fHeader.dump().c_str());
-                  // rdp->dump();
-                  reps.push_back(rdp);
+                     rdp->fHeader["viewType"] = ep->GetManager()->GetProjection()->GetName();
+                     printf("set header %s\n", rdp->fHeader.dump().c_str());
+                     // rdp->dump();
+                     reps.push_back(rdp);
                   }
                }
             }
@@ -372,11 +372,11 @@ void makeTestScene()
    auto ps1 = getPointSet(20, 100, 3);
    ps1->SetElementName("Points_1");
    pntHolder->AddElement(ps1);
-   
+   /*
    auto ps2 = getPointSet(10, 200, 4);
    ps2->SetElementName("Points_2");
    pntHolder->AddElement(ps2);
-
+   */
    event->AddElement(pntHolder);
 
 
@@ -437,12 +437,12 @@ void splitContainer(bool printSShFw = false)
    mngRhoPhi->ImportElements(REX::gEve->GetGlobalScene());    
    mngRhoPhi->ImportElements(REX::gEve->GetEventScene());
 
-   
+
    // project geometry and event scene
    mngRhoZ = new REX::TEveProjectionManager(REX::TEveProjection::kPT_RhoZ); 
    mngRhoZ->ImportElements(REX::gEve->GetGlobalScene());
    mngRhoZ->ImportElements(REX::gEve->GetEventScene());
-   
+
    handler = new WHandler();
    handler->makeWebWindow("", printSShFw);
 }

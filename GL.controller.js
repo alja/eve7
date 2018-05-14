@@ -67,6 +67,7 @@ sap.ui.define([
         drawExtra : function(el) {
             if (!this.geo_painter) {
                 // no painter - no draw of event
+                console.log("fast event geo not initialized append element",  this.getView().getId())
                 this.fast_event.push(el);
                 return false;
             }
@@ -74,15 +75,20 @@ sap.ui.define([
                // this.geo_painter.clearExtras(); // remove old three.js container with tracks and hits
                 var len = this.fast_event.length;
                 for(var i = 0; i < len;  i++){
-                    var  x = this.fast_event.pop();
-                    // console.log("draw extra ", x, this.viewType);
+                    var x = this.fast_event[i];
+                    console.log("draw extra ... catchup fast event ", x, this.getView().getId());
                     var rnrData = x[this.viewType];
                     if (rnrData) {
                         // console.log("calling rendere ",rnrData.rnrFunc, rnrData );
                         this[rnrData.rnrFunc](x, rnrData);
                     }
                 }
-                if (el) {this[x.renderer](x);}
+                this.fast_event = [];
+                
+                if (el) {
+                    console.log("draw extra SINGLE");
+                    this[x.renderer](x);
+                }
                 if (this.needRedraw) {
                     this.geo_painter.Render3D();
                     this.needRedraw = false;
@@ -176,9 +182,9 @@ sap.ui.define([
                 {
                     c[i].geo_object.fRnrSelf = newEl.fRnrSelf;
                     c[i].visible = newEl.fRnrSelf;
-                    //this.geo_painter.Render3D();
-                    console.log("------------- rnrstate ", c[i].visible );
-                    this.geo_painter._renderer.render(this.geo_painter._scene, this.geo_painter._camera);
+                    this.geo_painter.Render3D();
+                    console.log("------------- rnrstate ", this.geo_painter, c[i].visible );
+                    //this.geo_painter._renderer.render(this.geo_painter._scene, this.geo_painter._camera);
                     break;
                 }
             }

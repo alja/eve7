@@ -192,14 +192,14 @@ sap.ui.define([
 
             var eventPath = oEvent.getParameter("listItem").getBindingContext("myModelName").getPath();
 	    var oProductDetailPanel = this.byId("productDetailsPanel");
-            console.log("event path ", eventPath);
+            //console.log("event path ", eventPath);
 	    oProductDetailPanel.bindElement({ path: eventPath, model: "event" });
 
           var gedFrame =  this.getView().byId("GED");
           gedFrame.unbindElement();
           gedFrame.destroyContent();
           this.makeDataForGED(this.editorElement);
-          console.log("going to bind >>> ", this.getView().getModel("ged"));
+          // console.log("going to bind >>> ", this.getView().getModel("ged"));
           gedFrame.bindAggregation("content", "ged>/widgetlist"  , this.gedFactory );
             
         },
