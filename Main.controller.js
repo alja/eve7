@@ -57,21 +57,43 @@ sap.ui.define(['sap/ui/core/mvc/Controller'],
 
                               for (var i = 0; i < renderData["hsArr"].length; ++i)
                               {
-                                  // console.log(">>>>>>>> LOOP view type ", i, off);
+                                  console.log(">>>>>>>> LOOP view type ", i, off);
                                   var vha = new Int8Array(msg, off,renderData["hsArr"][i]);
                                   str = String.fromCharCode.apply(String, vha);
-                                  // console.log("header ", str);
+                                  console.log("HEADER ", str);
                                   var vo = JSON.parse(str);
                                   
                                   var headOff =  4*Math.ceil(renderData["hsArr"][i]/4.0);
                                   off += headOff;
                                   var totalSizeVT = renderData["bsArr"][i];
                                   var arrSize = totalSizeVT - headOff;
-                                  // console.log("array size off", arrSize, off);
-                                  var fArr = new Float32Array(msg, off, arrSize/4);
-                                  off+=arrSize;
-                                  // console.log("arr off ", fArr, off);                            
-                                  vo["glBuff"] = fArr;
+
+                                  console.log("array size off", arrSize, off);
+                                  if (vo.vertexN) {
+                                      console.log("vertex array size off", vo.vertexN);
+                                      var fArr = new Float32Array(msg, off, vo.vertexN);
+                                      off+=vo.vertexN*4;
+                                      // console.log("vertex arr off ", fArr, off);                            
+                                      vo["vtxBuff"] = fArr;
+                                  }
+
+                                  if (vo.normalN) {
+                                      console.log("vertex array size off", vo.normalN);
+                                      var fArr = new Float32Array(msg, off, vo.normalN);
+                                      off+=vo.nornalN*4;
+                                      // console.log("normal arr off ", fArr, off);                            
+                                      vo["normalBuff"] = fArr;
+                                  }
+
+                                  if (vo.indexN) {
+                                      console.log("index array size", vo.indexN, "off", off);
+                                      var iArr = new Int32Array(msg, off, vo.indexN);
+                                      off+=vo.indexN*4;
+                                      console.log("index arr == ", iArr);                            
+                                      vo["idxBuff"] = iArr;
+                                  }
+
+                                  
                                   el[vo.viewType] = vo;
                                   // console.log("add render info ", el);
                               }

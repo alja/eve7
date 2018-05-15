@@ -64,6 +64,12 @@ sap.ui.define([
 			    member : "fRnrSelf",
                             _type   : "Bool"
 			}
+                        ,{
+			    name : "NSeg",
+			    srv : "SetNDiv",
+			    member : "fNDiv",
+                            _type   : "Number"
+			}
 	            ],
 	            "ROOT::Experimental::TEveTrack" : [
 		        {

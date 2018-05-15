@@ -80,7 +80,8 @@ sap.ui.define([
                     var rnrData = x[this.viewType];
                     if (rnrData) {
                         // console.log("calling rendere ",rnrData.rnrFunc, rnrData );
-                        this[rnrData.rnrFunc](x, rnrData);
+                        var mesh = this[rnrData.rnrFunc](x, rnrData);
+                        this.geo_painter.getExtrasContainer().add(mesh);
                     }
                 }
                 this.fast_event = [];
@@ -100,13 +101,14 @@ sap.ui.define([
         },
         makeHit: function(hit, rnrData) {
             console.log("drawHit ", hit, "this type ", this.viewType);
+            // console.log("marker size ", hit.fMarkerSize)
             var hit_size = 8*rnrData.fMarkerSize,
-                size = rnrData.glBuff.length/3,
+                size = rnrData.vtxBuff.length/3,
                 pnts = new JSROOT.Painter.PointsCreator(size, true, hit_size);
             
             for (var i=0;i<size;i++) {
-                pnts.AddPoint(rnrData.glBuff[i*3],rnrData.glBuff[i*3+1],rnrData.glBuff[i*3+2]);
-               // console.log("add vertex ", rnrData.glBuff[i*3],rnrData.glBuff[i*3+1],rnrData.glBuff[i*3+2]);
+                pnts.AddPoint(rnrData.vtxBuff[i*3],rnrData.vtxBuff[i*3+1],rnrData.vtxBuff[i*3+2]);
+               // console.log("add vertex ", rnrData.vtxBuff[i*3],rnrData.vtxBuff[i*3+1],rnrData.vtxBuff[i*3+2]);
             }
             var mesh = pnts.CreatePoints(JSROOT.Painter.root_colors[rnrData.fMarkerColor] || "rgb(0,0,255)");
 
@@ -117,22 +119,21 @@ sap.ui.define([
             mesh.geo_object = hit;
 
             mesh.visible = hit.fRnrSelf;
-            this.geo_painter.getExtrasContainer().add(mesh);
             return mesh;
         },
         makeTrack: function(track, rnrData) {            
-            var N = rnrData.glBuff.length/3;
+            var N = rnrData.vtxBuff.length/3;
             var track_width = track.fLineWidth || 1,
                 track_color = JSROOT.Painter.root_colors[track.fLineColor] || "rgb(255,0,255)";
 
             var buf = new Float32Array(N*3*2), pos = 0;
             for (var k=0;k<(N-1);++k) {
-                buf[pos]   = rnrData.glBuff[k*3];
-                buf[pos+1] = rnrData.glBuff[k*3+1];
-                buf[pos+2] = rnrData.glBuff[k*3+2];
-                buf[pos+3] = rnrData.glBuff[k*3+3];
-                buf[pos+4] = rnrData.glBuff[k*3+4];
-                buf[pos+5] = rnrData.glBuff[k*3+5];
+                buf[pos]   = rnrData.vtxBuff[k*3];
+                buf[pos+1] = rnrData.vtxBuff[k*3+1];
+                buf[pos+2] = rnrData.vtxBuff[k*3+2];
+                buf[pos+3] = rnrData.vtxBuff[k*3+3];
+                buf[pos+4] = rnrData.vtxBuff[k*3+4];
+                buf[pos+5] = rnrData.vtxBuff[k*3+5];
                 // console.log(" vertex ", buf[pos],buf[pos+1], buf[pos+2],buf[pos+3], buf[pos+4],  buf[pos+5]);
                 pos+=6;
             }
@@ -142,17 +143,16 @@ sap.ui.define([
             line.geo_name = track.fName;
             line.geo_object = track;
             line.visible = track.fRnrSelf;
-            console.log("make track ", track);
-            this.geo_painter.getExtrasContainer().add(line);
+            console.log("make track ", track, line.visible);
             return line;
         },
         makeJet: function(jet, rnrData) {
             console.log("make jet ", jet);
             //var geo = new EveJetConeGeometry(jet.geoBuff);
             var geo = new THREE.BufferGeometry;
-            geo.addAttribute('position', new THREE.BufferAttribute( rnrData.glBuff, 3 ) );
+            geo.addAttribute('position', new THREE.BufferAttribute( rnrData.vtxBuff, 3 ) );
             {
-                var N = rnrData.glBuff.length / 3;
+                var N = rnrData.vtxBuff.length / 3;
                 var idcs = [];
                 idcs.push( N - 1 );  idcs.push( 0 );  idcs.push( 1 );
                 for (var i = 1; i < N - 1; ++i)
@@ -165,29 +165,37 @@ sap.ui.define([
             var jet_ro = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: new THREE.Color(0xff0000) }));
             jet_ro.geo_name = jet.fName;
             jet_ro.geo_object = jet;
-            this.geo_painter.getExtrasContainer().add(jet_ro);
             jet_ro.visible = jet.fRnrSelf;
             return jet_ro;
         },
 
         replaceElement:function(oldEl, newEl) {
-            // console.log("GL controller replace element  OLD", oldEl,  oldEl.fRnrSelf);
-            // console.log("GL controller replace element  NEW",  newEl, newEl.fRnrSelf);
+            console.log("GL controller replace element  OLD", oldEl,  oldEl.fRnrSelf);
+            console.log("GL controller replace element  NEW",  newEl, newEl.fRnrSelf);
 
             var ec = this.geo_painter.getExtrasContainer();
-            var c = ec.children;
-            var rnrData;
-            for (var i = 0; i < c.length; ++i) {
-                if (c[i].geo_object.guid == newEl.guid)
+            var chld = ec.children;
+            var idx = -1;
+            for (var i = 0; i < chld.length; ++i) {
+                if (chld[i].geo_object.guid == newEl.guid)
                 {
-                    c[i].geo_object.fRnrSelf = newEl.fRnrSelf;
-                    c[i].visible = newEl.fRnrSelf;
-                    this.geo_painter.Render3D();
-                    console.log("------------- rnrstate ", this.geo_painter, c[i].visible );
-                    //this.geo_painter._renderer.render(this.geo_painter._scene, this.geo_painter._camera);
+                    idx = i;
                     break;
                 }
             }
+
+
+            var rnrData = oldEl[this.viewType];
+
+            
+            console.log("calling draw",  newEl, newEl.fRnrSelf);
+           chld[idx] = this[rnrData.rnrFunc](newEl, rnrData);
+            
+            this.geo_painter.Render3D();
+           console.log("------------- rnrstate ", this.geo_painter, newEl );
+            //this.geo_painter._renderer.render(this.geo_painter._scene, this.geo_painter._camera);
+
+
         },
 	onResize: function(event) {
             // use timeout

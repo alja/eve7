@@ -74,7 +74,7 @@ public:
 
    void streamEveElement(REX::TEveElement* el,nlohmann::json& jsonParent )
    {
-      printf("BEGIN stream element %s \n", el->GetElementName() );
+      // printf("BEGIN stream element %s \n", el->GetElementName() );
 
       nlohmann::json cj;
       el->SetCoreJson(cj);
@@ -99,7 +99,7 @@ public:
    {
       if (el->GetUserData()) {
 
-         printf("send render data %s\n", el->GetElementName());
+         // printf("send render data %s\n", el->GetElementName());
          
          nlohmann::json topRnrHeader;
          topRnrHeader["guid"] = el->GetElementId();         
@@ -114,7 +114,7 @@ public:
          // AMT presume object has a user data is also prectab;e
          REX::TEveProjectable* projectable = dynamic_cast<REX::TEveProjectable*>(el);
          if (projectable && projectable->HasProjecteds()){
-            printf("collect prjected begin >>>>>>>> \n");
+            // printf("collect prjected begin >>>>>>>> \n");
             int y = 0;
             for (auto pit = projectable->BeginProjecteds(); pit != projectable->EndProjecteds(); ++pit)
             {
@@ -122,22 +122,22 @@ public:
                REX::TEveProjected* ep = *pit;
                REX::TEveElement* pEl = dynamic_cast<REX::TEveElement*>(ep);
                if (pEl) {
-                  printf("collect projected loop %d %s \n", y++, ep->GetManager()->GetProjection()->GetName());
+                  // printf("collect projected loop %d %s \n", y++, ep->GetManager()->GetProjection()->GetName());
                   // AMT this should be handled with import
                   pEl->BuildRenderData();
                   if (pEl->GetUserData()) {
-                     printf("projected %s %p\n", pEl->GetElementName(), pEl->GetUserData());
+                     // printf("projected %s %p\n", pEl->GetElementName(), pEl->GetUserData());
                   
                      REX::RenderData* rdp = ( REX::RenderData*)(pEl->GetUserData());
 
                      rdp->fHeader["viewType"] = ep->GetManager()->GetProjection()->GetName();
-                     printf("set header %s\n", rdp->fHeader.dump().c_str());
+                     // printf("set header %s\n", rdp->fHeader.dump().c_str());
                      // rdp->dump();
                      reps.push_back(rdp);
                   }
                }
             }
-            printf("end collecting view types\n");
+            // printf("end collecting view types\n");
          }
          
          
@@ -145,12 +145,12 @@ public:
          for (auto it=reps.begin(); it != reps.end(); ++it)
          {
             REX::RenderData* rd = *it;
-            topRnrHeader["hsArr"].push_back(rd->getHeaderSize());
-            size_t ts = rd->getTotalSize();
+            topRnrHeader["hsArr"].push_back(rd->GetHeaderSize());
+            size_t ts = rd->GetTotalSize();
             topRnrHeader["bsArr"].push_back(ts);
             totalSizeViewTypes += ts;
          }
-         printf("total size viewType %d\n", (int)totalSizeViewTypes);
+         // printf("total size viewType %d\n", (int)totalSizeViewTypes);
 
          std::string topRnrHeaderFlat = topRnrHeader.dump();
          size_t thsRound = 4* int(ceil(topRnrHeaderFlat.size()/4.0));
@@ -169,19 +169,19 @@ public:
          off += thsRound;
          for (auto it=reps.begin(); it != reps.end(); ++it){
             REX::RenderData* rd = *it;
-            int bw = rd->write(pkgBuff+off);
+            int bw = rd->Write(pkgBuff+off);
             //rd->dump();
             off += bw; 
          }
 
-         printf("total %d off %d\n", (int)pkgSize, off);
+         // printf("total %d off %d\n", (int)pkgSize, off);
 
          fWindow->SendBinary(connid, pkgBuff, pkgSize);
 
-         printf("send binary end\n");
+         // printf("send binary end\n");
       }
 
-      printf("send rnr data loop children \n");
+      // printf("send rnr data loop children \n");
       for (auto it = el->BeginChildren(); it != el->EndChildren(); ++it)
          sendRenderData(*it, connid);
    }
@@ -218,7 +218,7 @@ public:
             eventScene["arr"] = nlohmann::json::array();
             streamEveElement(eveMng->GetEventScene(), eventScene);
             
-            printf("send scene %s \n", eventScene.dump().c_str());
+            // printf("send scene %s \n", eventScene.dump().c_str());
             jTop["args"] = eventScene["arr"];
             fWindow->Send(connid,jTop.dump());
             // render info
@@ -322,7 +322,7 @@ REX::TEvePointSet* getPointSet(int npoints = 2, float s=2, int color=4)
          ps->SetNextPoint(r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s));
    
    ps->SetMarkerColor(color);
-   ps->SetMarkerSize(r.Uniform(1, 2));
+   ps->SetMarkerSize(3+r.Uniform(1, 2));
    ps->SetMarkerStyle(4);
    return ps;
 }

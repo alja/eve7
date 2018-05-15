@@ -23,9 +23,12 @@ class ViewManager {
 
     replace(oldEl, newEl) {
        // console.log("viewManager old ", oldEl);
-       // console.log("viewManager new",  newEl);
+        console.log("viewManager new",  newEl);
+        
         for (var i = 0; i < this.views.length; ++i)
         {
+            var vt = this.views[i].type;
+            newEl[vt] = oldEl[vt];
             var c = sap.ui.getCore().byId(this.views[i].id).getController();
             c.replaceElement(oldEl, newEl);
         }
