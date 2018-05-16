@@ -34,6 +34,18 @@ class ViewManager {
         }
     }
 
+    setGeometry(arg)
+    {
+        console.log("view manager geometry ", arg);
+        for (var i = 0; i < this.views.length; ++i)
+        {
+            var controller =  sap.ui.getCore().byId(this.views[i].id).getController();
+            var type = this.views[i].type;
+            console.log("geo ", type, arg[type] );
+            controller.geometry(arg[type][0]);
+
+        }
+    }
     envokeViewFunc(func, arg) {
         // console.log("viewmanager envoke func ", func,         
         for (var i = 0; i < this.views.length; ++i)

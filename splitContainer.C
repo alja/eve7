@@ -60,6 +60,16 @@ struct Conn
    Conn(unsigned int cId) : fId(cId) {}
 };
 
+REX::TEveGeoShapeExtract* getShapeExtract(REX::TEveGeoShape* gs)
+{
+      auto ese = new REX::TEveGeoShapeExtract();
+      ese->SetName(gs->GetElementName());
+      ese->SetShape(gs->GetShape());
+      TColor* c = gROOT->GetColor(gs->GetMainColor());
+      float rgba [4] = {c->GetRed(), c->GetGreen(), c->GetBlue(), 1 - float(gs->GetMainTransparency())/100};
+      ese->SetRGBA(rgba);
+      return ese;
+}
 class WHandler
 {
 private:
@@ -199,7 +209,37 @@ public:
             nlohmann::json j;
             j["function"] = "geometry";
             j["args"] = {nlohmann::json::parse(jsonGeo.Data())};
+            j["3D"] = {nlohmann::json::parse(jsonGeo.Data())};
                
+            float dz = 10;
+            {
+               auto fake = new REX::TEveGeoShapeExtract(mngRhoPhi->GetProjection()->GetName());
+               
+               TGeoTube* box = new TGeoTube( 240, 250, dz);
+
+               REX::TEveGeoShape* shape = new REX::TEveGeoShape;
+               shape->SetShape(box);
+               shape->SetMainColor(kCyan);
+               shape->SetMainTransparency(80);
+               fake->AddElement(getShapeExtract(shape));
+               
+               TString jsonFake = TBufferJSON::ConvertToJSON(fake, gROOT->GetClass("ROOT::Experimental::TEveGeoShapeExtract"));
+               j[mngRhoPhi->GetProjection()->GetName()] = {nlohmann::json::parse(jsonFake.Data())};
+            }
+
+            { auto fake = new REX::TEveGeoShapeExtract(mngRhoPhi->GetProjection()->GetName());
+               
+               TGeoBBox* box = new TGeoBBox( 300, 250, dz);
+               REX::TEveGeoShape* shape = new REX::TEveGeoShape;
+               shape->SetMainColor(kCyan);
+               shape->SetShape(box);
+               shape->SetMainTransparency(80);
+               fake->AddElement(getShapeExtract(shape));
+               
+               TString jsonFake = TBufferJSON::ConvertToJSON(fake, gROOT->GetClass("ROOT::Experimental::TEveGeoShapeExtract"));
+               j[mngRhoZ->GetProjection()->GetName()] = {nlohmann::json::parse(jsonFake.Data())};
+            }
+              
             //  printf("Sending geo json %s\n", j.dump().c_str());
             fWindow->Send(connid, j.dump());
             //sleep(5);
@@ -329,16 +369,6 @@ REX::TEvePointSet* getPointSet(int npoints = 2, float s=2, int color=4)
 }
 
 
-REX::TEveGeoShapeExtract* getShapeExtract(REX::TEveGeoShape* gs)
-{
-      auto ese = new REX::TEveGeoShapeExtract();
-      ese->SetName(gs->GetElementName());
-      ese->SetShape(gs->GetShape());
-      TColor* c = gROOT->GetColor(gs->GetMainColor());
-      float rgba [4] = {c->GetRed(), c->GetGreen(), c->GetBlue(), 1 - float(gs->GetMainTransparency())/100};
-      ese->SetRGBA(rgba);
-      return ese;
-}
 
 
 void makeTestScene()

@@ -46,9 +46,23 @@ sap.ui.define([
             var pthis = this;
             var id = this.getView().getId() + "--panelGL";
             this.viewType = this.getView().data("type");
+
+
+            
 	    JSROOT.draw(id, data, "", function(painter) {
                 console.log('GL painter initialized', painter);
                 pthis.geo_painter = painter;
+
+                if (pthis.viewType != "3D") {
+                    var a = 651;
+                    painter._camera =  new THREE.OrthographicCamera(a, -a, a, -a, a, -a);
+                    painter._camera.position.x = 0;
+                    painter._camera.position.y = 0;
+                    painter._camera.position.z = +200;
+                    painter._controls = JSROOT.Painter.CreateOrbitControl(painter, painter._camera, painter._scene, painter._renderer, painter._lookat);
+                }
+
+                
                 if (pthis.fast_event) pthis.drawExtra();
                 pthis.geo_painter.Render3D();
 
