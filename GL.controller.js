@@ -121,7 +121,7 @@ sap.ui.define([
             mesh.visible = hit.fRnrSelf;
             return mesh;
         },
-        makeTrack: function(track, rnrData) {            
+        makeTrack: function(track, rnrData) {
             var N = rnrData.vtxBuff.length/3;
             var track_width = track.fLineWidth || 1,
                 track_color = JSROOT.Painter.root_colors[track.fLineColor] || "rgb(255,0,255)";
@@ -131,15 +131,19 @@ sap.ui.define([
                 buf[pos]   = rnrData.vtxBuff[k*3];
                 buf[pos+1] = rnrData.vtxBuff[k*3+1];
                 buf[pos+2] = rnrData.vtxBuff[k*3+2];
+
+                // AMT ... if k+1 is a breakpoint
                 buf[pos+3] = rnrData.vtxBuff[k*3+3];
                 buf[pos+4] = rnrData.vtxBuff[k*3+4];
                 buf[pos+5] = rnrData.vtxBuff[k*3+5];
                 // console.log(" vertex ", buf[pos],buf[pos+1], buf[pos+2],buf[pos+3], buf[pos+4],  buf[pos+5]);
                 pos+=6;
             }
-            var lineMaterial = new THREE.LineBasicMaterial({ color: track_color, linewidth: track_width }),
-                line = JSROOT.Painter.createLineSegments(buf, lineMaterial);
-
+            var lineMaterial = new THREE.LineBasicMaterial({ color: track_color, linewidth: track_width });
+            var geom = new THREE.BufferGeometry();
+            geom.addAttribute( 'position', new THREE.BufferAttribute( buf, 3 )  );
+            var line = new THREE.LineSegments(geom, lineMaterial);
+      
             line.geo_name = track.fName;
             line.geo_object = track;
             line.visible = track.fRnrSelf;
@@ -154,7 +158,7 @@ sap.ui.define([
             {
                 var N = rnrData.vtxBuff.length / 3;
                 var idcs = [];
-                idcs.push( N - 1 );  idcs.push( 0 );  idcs.push( 1 );
+                idcs.push( N - 1 );  idcs.push( 0 );  idcs.push( 1 ); 
                 for (var i = 1; i < N - 1; ++i)
                 {
                     idcs.push( i );  idcs.push( 0 );  idcs.push( i + 1 );
