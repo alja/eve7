@@ -122,6 +122,9 @@ sap.ui.define([
             return mesh;
         },
         makeTrack: function(track, rnrData) {
+            if (this.viewType == "RhoZ") {
+                console.log("RhoZ track ", rnrData.idxBuff);
+            }
             var N = rnrData.vtxBuff.length/3;
             var track_width = track.fLineWidth || 1,
                 track_color = JSROOT.Painter.root_colors[track.fLineColor] || "rgb(255,0,255)";
@@ -132,10 +135,27 @@ sap.ui.define([
                 buf[pos+1] = rnrData.vtxBuff[k*3+1];
                 buf[pos+2] = rnrData.vtxBuff[k*3+2];
 
-                // AMT ... if k+1 is a breakpoint
-                buf[pos+3] = rnrData.vtxBuff[k*3+3];
-                buf[pos+4] = rnrData.vtxBuff[k*3+4];
-                buf[pos+5] = rnrData.vtxBuff[k*3+5];
+                var breakTrack = 0;
+                if (this.viewType == "RhoZ" && rnrData.idxBuff) {
+                    for (var b = 0; b < rnrData.idxBuff.length; b++)
+                    {
+                        if ( (k+1) == rnrData.idxBuff[b]) {
+                            breakTrack = 1;
+                        }
+                    }
+                }
+                
+                if (breakTrack) {
+                    buf[pos+3] = rnrData.vtxBuff[k*3];
+                    buf[pos+4] = rnrData.vtxBuff[k*3+1];
+                    buf[pos+5] = rnrData.vtxBuff[k*3+2];
+                }
+                else {
+                    buf[pos+3] = rnrData.vtxBuff[k*3+3];
+                    buf[pos+4] = rnrData.vtxBuff[k*3+4];
+                    buf[pos+5] = rnrData.vtxBuff[k*3+5];
+                }
+
                 // console.log(" vertex ", buf[pos],buf[pos+1], buf[pos+2],buf[pos+3], buf[pos+4],  buf[pos+5]);
                 pos+=6;
             }
