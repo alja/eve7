@@ -79,8 +79,9 @@ public:
       nlohmann::json cj;
       el->SetCoreJson(cj);
 
-      
-      el->BuildRenderData(); // unrelated temporary here
+      // unrelated temporary here
+      if (! el->GetUserData())
+         el->BuildRenderData(); 
       
       jsonParent["arr"].push_back(cj);
 
@@ -124,7 +125,7 @@ public:
                if (pEl) {
                   // printf("collect projected loop %d %s \n", y++, ep->GetManager()->GetProjection()->GetName());
                   // AMT this should be handled with import
-                  pEl->BuildRenderData();
+                  if (!pEl->GetUserData()) pEl->BuildRenderData();
                   if (pEl->GetUserData()) {
                      // printf("projected %s %p\n", pEl->GetElementName(), pEl->GetUserData());
                   
