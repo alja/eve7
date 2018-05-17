@@ -133,6 +133,7 @@ sap.ui.define([
             mesh.geo_object = hit;
 
             mesh.visible = hit.fRnrSelf;
+            mesh.material.sizeAttenuation = false;
             return mesh;
         },
         makeTrack: function(track, rnrData) {
