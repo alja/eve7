@@ -187,24 +187,50 @@ sap.ui.define([
         },
         makeJet: function(jet, rnrData) {
             console.log("make jet ", jet);
+            var jet_ro = new THREE.Object3D();
             //var geo = new EveJetConeGeometry(jet.geoBuff);
-            var geo = new THREE.BufferGeometry;
-            geo.addAttribute('position', new THREE.BufferAttribute( rnrData.vtxBuff, 3 ) );
+            var pos_ba = new THREE.BufferAttribute( rnrData.vtxBuff, 3 );
+            var N      = rnrData.vtxBuff.length / 3;
+
+            var geo_body = new THREE.BufferGeometry();
+            geo_body.addAttribute('position', pos_ba);
             {
-                var N = rnrData.vtxBuff.length / 3;
                 var idcs = [];
-                idcs.push( N - 1 );  idcs.push( 0 );  idcs.push( 1 ); 
+                idcs.push( 0 );  idcs.push( N - 1 );  idcs.push( 1 );
                 for (var i = 1; i < N - 1; ++i)
                 {
-                    idcs.push( i );  idcs.push( 0 );  idcs.push( i + 1 );
+                    idcs.push( 0 );  idcs.push( i );  idcs.push( i + 1 );
                 }
-                geo.setIndex( idcs );
+                geo_body.setIndex( idcs );
+            }
+            var geo_rim = new THREE.BufferGeometry();
+            geo_rim.addAttribute('position', pos_ba);
+            {
+                var idcs = [];
+                for (var i = 1; i < N; ++i)
+                {
+                    idcs.push( i );
+                }
+                geo_rim.setIndex( idcs );
+            }
+            var geo_rays = new THREE.BufferGeometry();
+            geo_rays.addAttribute('position', pos_ba);
+            {
+                var idcs = [];
+                for (var i = 1; i < N; i += 4)
+                {
+                    idcs.push( 0 ); idcs.push( i );
+                }
+                geo_rays.setIndex( idcs );
             }
 
-            var jet_ro = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: new THREE.Color(0xff0000) }));
+            jet_ro.add( new THREE.Mesh        (geo_body, new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.5 })) );
+            jet_ro.add( new THREE.LineLoop    (geo_rim,  new THREE.LineBasicMaterial({ linewidth: 2,   color: 0x00ffff, transparent: true, opacity: 0.5 })) );
+            jet_ro.add( new THREE.LineSegments(geo_rays, new THREE.LineBasicMaterial({ linewidth: 0.5, color: 0x00ffff, transparent: true, opacity: 0.5 })) );
             jet_ro.geo_name = jet.fName;
             jet_ro.geo_object = jet;
             jet_ro.visible = jet.fRnrSelf;
+
             return jet_ro;
         },
 
