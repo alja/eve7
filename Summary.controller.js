@@ -18,11 +18,11 @@ sap.ui.define([
 	    oTree.setIncludeItemInSelection(true);
             var oModel = new sap.ui.model.json.JSONModel();
             oModel.setData(data);
-	    
-	    oTree.setModel(oModel, "myModelName");
+	    oModel.setSizeLimit(10000);
+	    oTree.setModel(oModel, "treeModel");
 
 	    var oStandardTreeItemTemplate = new  sap.m.StandardTreeItem({
-	        title: "{myModelName>fName}",
+	        title: "{treeModel>fName}",
                 type: sap.m.ListType.Detail
 	    });
             /*
@@ -31,7 +31,7 @@ sap.ui.define([
             });
             oDataTemplate.bindProperty("value", "answer");
             */
-	    oTree.bindItems("myModelName>/", oStandardTreeItemTemplate);
+	    oTree.bindItems("treeModel>/", oStandardTreeItemTemplate);
             this.tree = oTree;
             this.model = oModel;
 
@@ -89,7 +89,7 @@ sap.ui.define([
             
 	},
         addNodesToTreeItemModel:function(el, model) {
-       //     console.log("FILL el ", el)
+            console.log("FILL el ", el.fName)
             model.fName = el.fName;
             model.guid = el.guid;
              if (el.arr) {
@@ -149,8 +149,8 @@ sap.ui.define([
 
             // console.log("tree ", this.tree.getItems());
             this.model.refresh(true);
-            this.tree.expandToLevel(3);
-	    sap.ui.getCore().setModel(this.model, "myModelName");
+            this.tree.expandToLevel(2);
+	    sap.ui.getCore().setModel(this.model, "treeModel");
 
             
             this.oProductModel = new sap.ui.model.json.JSONModel();
@@ -186,9 +186,9 @@ sap.ui.define([
         },
         onItemPressed: function(oEvent)
         {
-	    var path =  oEvent.getParameter("listItem").getBindingContext("myModelName").getPath();
-            // console.log("path XXX ", oEvent.getParameter("listItem").getBindingContext("myModelName").getProperty(path) );
-            var ttt = oEvent.getParameter("listItem").getBindingContext("myModelName").getProperty(path);
+	    var path =  oEvent.getParameter("listItem").getBindingContext("treeModel").getPath();
+            // console.log("path XXX ", oEvent.getParameter("listItem").getBindingContext("treeModel").getProperty(path) );
+            var ttt = oEvent.getParameter("listItem").getBindingContext("treeModel").getProperty(path);
 
             this.editorElement =  sap.ui.getCore().byId("TopEveId").getController().findElementWithId(ttt.guid);
             var oProductDetailPanel = this.byId("productDetailsPanel");
@@ -196,7 +196,7 @@ sap.ui.define([
             //var title =  this.editorElement._typename ;
             oProductDetailPanel.setHeaderText(title);
 
-            var eventPath = oEvent.getParameter("listItem").getBindingContext("myModelName").getPath();
+            var eventPath = oEvent.getParameter("listItem").getBindingContext("treeModel").getPath();
 	    var oProductDetailPanel = this.byId("productDetailsPanel");
             //console.log("event path ", eventPath);
 	    oProductDetailPanel.bindElement({ path: eventPath, model: "event" });
