@@ -102,7 +102,13 @@ sap.ui.define([
                 
                 if (el) {
                     console.log("draw extra SINGLE");
-                    this[x.renderer](x);
+
+                    var rnrData = el[this.viewType];
+                    if (rnrData) {
+                        // console.log("calling rendere ",rnrData.rnrFunc, rnrData );
+                        var mesh = this[rnrData.rnrFunc](el, rnrData);
+                        this.geo_painter.getExtrasContainer().add(mesh);
+                    }
                 }
                 if (this.needRedraw) {
                     this.geo_painter.Render3D();
