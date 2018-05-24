@@ -354,7 +354,7 @@ public:
 
 };
 
-REX::TEvePointSet* getPointSet(int npoints = 2, float s=2, int color=4)
+REX::TEvePointSet* getPointSet(int npoints = 2, float s=2, int color=28)
 {
    TRandom r(0);
    REX::TEvePointSet* ps = new REX::TEvePointSet("fu", npoints);
@@ -400,7 +400,7 @@ void makeTestScene()
   
    
    REX::TEveElement* pntHolder = new REX::TEveElementList("Hits");
-   auto ps1 = getPointSet(20, 100, 3);
+   auto ps1 = getPointSet(20, 100);
    ps1->SetElementName("Points_1");
    pntHolder->AddElement(ps1);
    /*
@@ -415,8 +415,9 @@ void makeTestScene()
    //
    auto prop = new REX::TEveTrackPropagator();
    prop->SetMagFieldObj(new REX::TEveMagFieldDuo(350, -3.5, 2.0));
-   prop->SetMaxR(1000);
-   prop->SetMaxZ(1000);
+   prop->SetMaxR(300);
+   prop->SetMaxZ(600);
+   prop->SetMaxOrbs(6);
    REX::TEveElement* trackHolder = new REX::TEveElementList("Tracks");
    if (1)   {
       TParticle* p = new TParticle();p->SetPdgCode(11);
@@ -424,6 +425,7 @@ void makeTestScene()
       p->SetMomentum(4.82895, 2.35083, -0.611757, 1);
       auto track = new REX::TEveTrack(p, 1, prop);
       track->MakeTrack();
+      track->SetMainColor(kBlue);
       track->SetElementName("TestTrack_1");
       trackHolder->AddElement(track);
    }
@@ -437,6 +439,23 @@ void makeTestScene()
       track->SetMainColor(kBlue);
       track->SetElementName("TestTrack_2");
       trackHolder->AddElement(track);
+   }
+   {
+      double v = 0.5;
+      double m = 5;
+      TRandom r(0);
+      for (int i = 0; i < 10; i++)
+      {
+         TParticle* p = new TParticle(); p->SetPdgCode(11);
+
+         p->SetProductionVertex(r.Uniform(-v,v), r.Uniform(-v,v), r.Uniform(-v,v), 1);
+         p->SetMomentum(r.Uniform(-m,m), r.Uniform(-m,m), r.Uniform(-m,m)*r.Uniform(1, 3), 1);
+         auto track = new REX::TEveTrack(p, 1, prop);
+         track->MakeTrack();
+         track->SetMainColor(kBlue);
+         track->SetElementName(Form("RandomTrack_%d",i ));
+         trackHolder->AddElement(track);
+      }
    }
    event->AddElement(trackHolder);
 
