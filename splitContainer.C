@@ -60,6 +60,8 @@ struct Conn
    Conn(unsigned int cId) : fId(cId) {}
 };
 
+//==============================================================================
+
 REX::TEveGeoShapeExtract* getShapeExtract(REX::TEveGeoShape* gs)
 {
       auto ese = new REX::TEveGeoShapeExtract();
@@ -70,6 +72,9 @@ REX::TEveGeoShapeExtract* getShapeExtract(REX::TEveGeoShape* gs)
       ese->SetRGBA(rgba);
       return ese;
 }
+
+//==============================================================================
+
 class WHandler
 {
 private:
@@ -82,7 +87,7 @@ public:
    virtual ~WHandler() { printf("Destructor!!!!\n"); }
    
 
-   void streamEveElement(REX::TEveElement* el,nlohmann::json& jsonParent )
+   void streamEveElement(REX::TEveElement* el, nlohmann::json& jsonParent)
    {
       // printf("BEGIN stream element %s \n", el->GetElementName() );
 
@@ -90,7 +95,7 @@ public:
       el->SetCoreJson(cj);
 
       // unrelated temporary here
-      if (! el->GetUserData())
+      if (! el->GetRenderData())
          el->BuildRenderData(); 
       
       jsonParent["arr"].push_back(cj);
@@ -108,7 +113,7 @@ public:
 
    void sendRenderData(REX::TEveElement* el, unsigned connid)
    {
-      if (el->GetUserData()) {
+      if (el->GetRenderData()) {
 
          // printf("send render data %s\n", el->GetElementName());
          
@@ -118,7 +123,7 @@ public:
          topRnrHeader["bsArr"] = nlohmann::json::array();
          
          std::vector<REX::RenderData*> reps;
-         REX::RenderData* rd3D = (REX::RenderData*)(el->GetUserData());
+         REX::RenderData* rd3D = (REX::RenderData*)(el->GetRenderData());
          rd3D->fHeader["viewType"] = "3D";
          reps.push_back(rd3D);
 
@@ -130,16 +135,17 @@ public:
             for (auto pit = projectable->BeginProjecteds(); pit != projectable->EndProjecteds(); ++pit)
             {
 
-               REX::TEveProjected* ep = *pit;
-               REX::TEveElement* pEl = dynamic_cast<REX::TEveElement*>(ep);
+               REX::TEveProjected *ep  = *pit;
+               REX::TEveElement   *pEl =  dynamic_cast<REX::TEveElement*>(ep);
                if (pEl) {
                   // printf("collect projected loop %d %s \n", y++, ep->GetManager()->GetProjection()->GetName());
                   // AMT this should be handled with import
-                  if (!pEl->GetUserData()) pEl->BuildRenderData();
-                  if (pEl->GetUserData()) {
-                     // printf("projected %s %p\n", pEl->GetElementName(), pEl->GetUserData());
+                  if ( ! pEl->GetRenderData()) pEl->BuildRenderData();
+                  if (pEl->GetRenderData())
+                  {
+                     // printf("projected %s %p\n", pEl->GetElementName(), pEl->GetRenderData());
                   
-                     REX::RenderData* rdp = ( REX::RenderData*)(pEl->GetUserData());
+                     REX::RenderData* rdp = ( REX::RenderData*)(pEl->GetRenderData());
 
                      rdp->fHeader["viewType"] = ep->GetManager()->GetProjection()->GetName();
                      // printf("set header %s\n", rdp->fHeader.dump().c_str());
@@ -292,9 +298,10 @@ public:
          fConnList.erase(conn);
          return;
       }
-      else {
+      else
+      {
          nlohmann::json cj =  nlohmann::json::parse(arg.c_str());
-         std::string mir =  cj["mir"];
+         std::string mir   =  cj["mir"];
          std::string ctype =  cj["class"];
          int id = cj["guid"];
       
